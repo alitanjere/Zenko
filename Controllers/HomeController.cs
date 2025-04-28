@@ -1,31 +1,50 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ZenkoApp.Models;
+using OfficeOpenXml;
+using System.IO;
+using Microsoft.AspNetCore.Http;
 
-namespace ZenkoApp.Controllers;
 
-public class HomeController : Controller
+namespace ZenkoApp.Controllers
 {
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(ILogger<HomeController> logger)
+    public class HomeController : Controller
     {
-        _logger = logger;
-    }
+        static HomeController()
+        {
+            // Establecer la licencia gratuita de EPPlus (solo para uso no comercial)
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        }
 
-    public IActionResult Index()
-    {
-        return View();
-    }
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        [HttpPost]
+        public IActionResult UploadExcel(IFormFile file)
+        {
+            if (file != null && file.Length > 0)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    file.CopyTo(stream);
+                    using (var package = new ExcelPackage(stream))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        var rowCount = worksheet.Dimension.Rows;
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                        for (int row = 2; row <= rowCount; row++) // Starting from 2 to skip headers
+                        {
+                            var productName = worksheet.Cells[row, 1].Text;
+                            var productPrice = worksheet.Cells[row, 2].Text;
+                            var productCategory = worksheet.Cells[row, 3].Text;
+
+                            // Aquí puedes guardar estos datos en la base de datos o procesarlos como desees.
+                        }
+                    }
+                }
+            }
+            return RedirectToAction("Index"); // Redirige de vuelta al índice
+        }
     }
 }

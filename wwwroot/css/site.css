@@ -1,22 +1,21 @@
-html {
-  font-size: 14px;
+/* En wwwroot/css/site.css o en un archivo CSS personalizado */
+
+.container {
+  text-align: center;
+  margin-top: 50px;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+form {
+  margin-top: 20px;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+input[type="file"] {
+  display: block;
+  margin: 0 auto;
+  margin-bottom: 20px;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
+button {
+  padding: 15px 30px;
+  font-size: 18px;
 }
