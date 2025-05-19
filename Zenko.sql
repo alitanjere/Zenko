@@ -1,10 +1,23 @@
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0001', 'Poplín blanco', 780.50);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0002', 'Jersey algodón', 1120.00);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0003', 'Gabardina lisa', 1450.75);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0004', 'Denim azul', 1580.00);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0005', 'Frisa liviana', 1290.30);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0006', 'Rib elastizado', 880.90);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0007', 'Modal estampado', 1680.00);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0008', 'Lycra deportiva', 1985.60);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0009', 'Interlock grueso', 1230.00);
-INSERT INTO Lista_Precio_Telas (TelaCodigo, TelaNombre, Costo) VALUES ('TEL-0010', 'Algodón 100% natural', 950.00);
+CREATE DATABASE Zenko;
+GO
+
+-- Usar la base de datos reciÃ©n creada
+USE Zenko;
+GO
+
+CREATE TABLE Tipos_Insumo (
+    IdTipoInsumo INT PRIMARY KEY,
+    Nombre NVARCHAR(50) NOT NULL,
+    CodigoPrefijo VARCHAR(5) NOT NULL
+);
+
+CREATE TABLE Insumos (
+    CodigoInsumo nVARCHAR(20) PRIMARY KEY,
+    IdTipoInsumo INT NOT NULL,
+    Costo DECIMAL(10, 2),
+    FechaRegistro DATE NOT NULL,
+    FOREIGN KEY (IdTipoInsumo) REFERENCES Tipos_Insumo(IdTipoInsumo)
+);
+
+INSERT INTO Tipos_Insumo (IdTipoInsumo, Nombre, CodigoPrefijo) VALUES (1, 'Tela', 'V23');
+INSERT INTO Tipos_Insumo (IdTipoInsumo, Nombre, CodigoPrefijo) VALUES (2, 'Avio', 'I18');
