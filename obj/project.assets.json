@@ -2,6 +2,19 @@
   "version": 3,
   "targets": {
     "net8.0": {
+      "Dapper/2.1.66": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Dapper.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Dapper.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "EPPlus/6.0.3": {
         "type": "package",
         "dependencies": {
@@ -330,6 +343,25 @@
     }
   },
   "libraries": {
+    "Dapper/2.1.66": {
+      "sha512": "/q77jUgDOS+bzkmk3Vy9SiWMaetTw+NOoPAV0xPBsGVAyljd5S6P+4RUW7R3ZUGGr9lDRyPKgAMj2UAOwvqZYw==",
+      "type": "package",
+      "path": "dapper/2.1.66",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Dapper.png",
+        "dapper.2.1.66.nupkg.sha512",
+        "dapper.nuspec",
+        "lib/net461/Dapper.dll",
+        "lib/net461/Dapper.xml",
+        "lib/net8.0/Dapper.dll",
+        "lib/net8.0/Dapper.xml",
+        "lib/netstandard2.0/Dapper.dll",
+        "lib/netstandard2.0/Dapper.xml",
+        "readme.md"
+      ]
+    },
     "EPPlus/6.0.3": {
       "sha512": "FepVNAluA58cFZ7grhULpPFMA7lYWx3CZtyj1ZbwyzN2rkecpLJfueDVmDgXpwCC/0BNKj/4rdpPAafFMK1kpQ==",
       "type": "package",
@@ -864,27 +896,28 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "Dapper >= 2.1.66",
       "EPPlus >= 6.0.3"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\94643227\\.nuget\\packages\\": {},
+    "C:\\Users\\48178331\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "Z:\\Zenko\\ZenkoApp\\ZenkoApp.csproj",
+      "projectUniqueName": "C:\\Users\\48178331\\Zenko\\ZenkoApp.csproj",
       "projectName": "ZenkoApp",
-      "projectPath": "Z:\\Zenko\\ZenkoApp\\ZenkoApp.csproj",
-      "packagesPath": "C:\\Users\\94643227\\.nuget\\packages\\",
-      "outputPath": "Z:\\Zenko\\ZenkoApp\\obj\\",
+      "projectPath": "C:\\Users\\48178331\\Zenko\\ZenkoApp.csproj",
+      "packagesPath": "C:\\Users\\48178331\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\48178331\\Zenko\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\94643227\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\48178331\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -916,6 +949,10 @@
       "net8.0": {
         "targetAlias": "net8.0",
         "dependencies": {
+          "Dapper": {
+            "target": "Package",
+            "version": "[2.1.66, )"
+          },
           "EPPlus": {
             "target": "Package",
             "version": "[6.0.3, )"
