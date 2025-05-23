@@ -1,6 +1,5 @@
 ﻿@{
     ViewData["Title"] = "Inicio";
-    var productos = ViewBag.Productos as List<dynamic>;
 }
 
 @section Styles {
@@ -27,39 +26,19 @@
 
 <div class="hero">
     <h1>Bienvenido a Zenko</h1>
-    <p>Subí tu archivo Excel para cargar insumos fácilmente</p>
+    <p>Cargá tus archivos Excel de Insumos y Avíos</p>
 </div>
 
 <div class="upload-card mb-5">
     <form asp-action="UploadExcel" method="post" enctype="multipart/form-data">
         <div class="form-group mb-3">
-            <label for="file">Archivo Excel</label>
-            <input type="file" name="file" class="form-control" required />
+            <label for="fileTelas">Archivo Excel de Telas</label>
+            <input type="file" name="fileTelas" class="form-control" required />
         </div>
-        <button type="submit" class="btn btn-primary btn-lg w-100">Cargar Archivo Excel</button>
+        <div class="form-group mb-3">
+            <label for="fileAvios">Archivo Excel de Avíos</label>
+            <input type="file" name="fileAvios" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg w-100">Cargar y continuar</button>
     </form>
 </div>
-
-@if (productos != null && productos.Count > 0)
-{
-    <h3 class="text-center mb-4">Productos Cargados</h3>
-    <table class="table table-striped table-bordered">
-        <thead class="table-light">
-            <tr>
-                <th>Nombre</th>
-                <th>Precio</th>
-                <th>Categoría</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in productos)
-            {
-                <tr>
-                    <td>@p.Nombre</td>
-                    <td>@p.Precio</td>
-                    <td>@p.Categoria</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}

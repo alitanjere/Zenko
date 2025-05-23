@@ -1,23 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\48178331\\Zenko\\ZenkoApp.csproj": {}
+    "C:\\Users\\94643227\\Desktop\\Zenko\\ZenkoApp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\48178331\\Zenko\\ZenkoApp.csproj": {
+    "C:\\Users\\94643227\\Desktop\\Zenko\\ZenkoApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\48178331\\Zenko\\ZenkoApp.csproj",
+        "projectUniqueName": "C:\\Users\\94643227\\Desktop\\Zenko\\ZenkoApp.csproj",
         "projectName": "ZenkoApp",
-        "projectPath": "C:\\Users\\48178331\\Zenko\\ZenkoApp.csproj",
-        "packagesPath": "C:\\Users\\48178331\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\48178331\\Zenko\\obj\\",
+        "projectPath": "C:\\Users\\94643227\\Desktop\\Zenko\\ZenkoApp.csproj",
+        "packagesPath": "C:\\Users\\94643227\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\94643227\\Desktop\\Zenko\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
+<<<<<<< HEAD
           "C:\\Users\\48178331\\AppData\\Roaming\\NuGet\\NuGet.Config",
+=======
+          "C:\\Users\\94643227\\AppData\\Roaming\\NuGet\\NuGet.Config",
+>>>>>>> 08753557cefef43930d01f7030f3ced6318cbba4
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -56,6 +60,10 @@
             "EPPlus": {
               "target": "Package",
               "version": "[6.0.3, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
             },
             "System.Data.SqlClient": {
               "target": "Package",
