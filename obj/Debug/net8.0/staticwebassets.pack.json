@@ -1,8 +1,8 @@
 {
   "Files": [
     {
-      "Id": "C:\\Users\\48178331\\Zenko\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\ZenkoApp.bundle.scp.css",
-      "PackagePath": "staticwebassets\\ZenkoApp.bundle.scp.css"
+      "Id": "C:\\Users\\48178331\\Zenko\\wwwroot\\css\\Layout.css",
+      "PackagePath": "staticwebassets\\css\\Layout.css"
     },
     {
       "Id": "C:\\Users\\48178331\\Zenko\\wwwroot\\css\\site.css",
