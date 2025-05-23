@@ -1,11 +1,16 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Zenko.Services; // Agregar para que reconozca tus servicios
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Registramos MVC
 builder.Services.AddControllersWithViews();
+
+// Registramos los servicios para inyección de dependencias
+builder.Services.AddScoped<ExcelService>();
+builder.Services.AddScoped<CalculoService>();
 
 var app = builder.Build();
 

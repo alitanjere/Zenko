@@ -1,0 +1,17 @@
+@model List<string>
+
+<h2>Resultados</h2>
+
+@if (Model != null && Model.Count > 0)
+{
+    <ul>
+    @foreach (var item in Model)
+    {
+        <li>@item</li>
+    }
+    </ul>
+}
+else
+{
+    <p>No hay datos para mostrar.</p>
+}

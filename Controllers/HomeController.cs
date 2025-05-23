@@ -1,17 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
-using OfficeOpenXml;
-using System.IO;
-using Microsoft.AspNetCore.Http;
+using Zenko.Models;
+using Zenko.Services;
+using Newtonsoft.Json;
+using System.Threading.Tasks;      // Para Task<>
+using Microsoft.AspNetCore.Http;   // Para IFormFile
+using System.IO;                   // Para MemoryStream
+using System.Collections.Generic;  // Para List<>
 
-
-namespace ZenkoApp.Controllers
+namespace Zenko.Controllers
 {
     public class HomeController : Controller
     {
-        static HomeController()
+        private readonly ExcelService _excelService;
+        private readonly CalculoService _calculoService;
+
+        public HomeController(ExcelService excelService, CalculoService calculoService)
         {
-            // Establecer la licencia gratuita de EPPlus (solo para uso no comercial)
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            _excelService = excelService;
+            _calculoService = calculoService;
         }
 
         [HttpGet]
@@ -21,30 +27,40 @@ namespace ZenkoApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult UploadExcel(IFormFile file)
+        public async Task<IActionResult> UploadExcel(IFormFile fileTelas, IFormFile fileAvios)
         {
-            if (file != null && file.Length > 0)
+            if (fileTelas != null && fileAvios != null)
             {
-                using (var stream = new MemoryStream())
+                using (var telasStream = new MemoryStream())
+                using (var aviosStream = new MemoryStream())
                 {
-                    file.CopyTo(stream);
-                    using (var package = new ExcelPackage(stream))
-                    {
-                        var worksheet = package.Workbook.Worksheets[0];
-                        var rowCount = worksheet.Dimension.Rows;
+                    await fileTelas.CopyToAsync(telasStream);
+                    await fileAvios.CopyToAsync(aviosStream);
 
-                        for (int row = 2; row <= rowCount; row++) // Starting from 2 to skip headers
-                        {
-                            var productName = worksheet.Cells[row, 1].Text;
-                            var productPrice = worksheet.Cells[row, 2].Text;
-                            var productCategory = worksheet.Cells[row, 3].Text;
+                    telasStream.Position = 0;
+                    aviosStream.Position = 0;
 
-                            // Aquí puedes guardar estos datos en la base de datos o procesarlos como desees.
-                        }
-                    }
+                    var telas = _excelService.LeerArchivoTelas(telasStream);
+                    var avios = _excelService.LeerArchivoAvios(aviosStream);
+                    var resultados = _calculoService.CalcularCostos(telas, avios);
+
+                    TempData["Resultados"] = JsonConvert.SerializeObject(resultados);
                 }
+
+                return RedirectToAction("Resultados");
             }
-            return RedirectToAction("Index"); // Redirige de vuelta al índice
+
+            ModelState.AddModelError("", "Debés subir ambos archivos Excel.");
+            return View("Index");
+        }
+
+        [HttpGet]
+        public IActionResult Resultados()
+        {
+            // Ejemplo de datos para pasar a la vista
+            var datos = new List<string> { "Elemento 1", "Elemento 2", "Elemento 3" };
+
+            return View(datos); // Pasamos la lista como modelo
         }
     }
 }
