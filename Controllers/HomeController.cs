@@ -42,8 +42,43 @@ namespace Zenko.Controllers
 
                     var telas = _excelService.LeerArchivoTelas(telasStream);
                     var avios = _excelService.LeerArchivoAvios(aviosStream);
-                    var resultados = _calculoService.CalcularCostos(telas, avios);
 
+                    // --- Inicio: Integración con BD ---
+                    int idTipoTela = BD.ObtenerIdTipoPorNombre("Tela");
+                    int idTipoAvio = BD.ObtenerIdTipoPorNombre("Avio");
+
+                    if (idTipoTela != 0 && telas != null)
+                    {
+                        foreach (var telaExcel in telas)
+                        {
+                            var nuevoInsumo = new Insumo
+                            {
+                                CodigoInsumo = telaExcel.Codigo,
+                                IdTipoInsumo = idTipoTela,
+                                Costo = telaExcel.CostoPorMetro,
+                                FechaRegistro = System.DateTime.Now
+                            };
+                            BD.InsertarInsumo(nuevoInsumo);
+                        }
+                    }
+
+                    if (idTipoAvio != 0 && avios != null)
+                    {
+                        foreach (var avioExcel in avios)
+                        {
+                            var nuevoInsumo = new Insumo
+                            {
+                                CodigoInsumo = avioExcel.Codigo,
+                                IdTipoInsumo = idTipoAvio,
+                                Costo = avioExcel.CostoUnidad,
+                                FechaRegistro = System.DateTime.Now
+                            };
+                            BD.InsertarInsumo(nuevoInsumo);
+                        }
+                    }
+                    // --- Fin: Integración con BD ---
+
+                    var resultados = _calculoService.CalcularCostos(telas, avios);
                     TempData["Resultados"] = JsonConvert.SerializeObject(resultados);
                 }
 
@@ -57,10 +92,19 @@ namespace Zenko.Controllers
         [HttpGet]
         public IActionResult Resultados()
         {
-            // Ejemplo de datos para pasar a la vista
-            var datos = new List<string> { "Elemento 1", "Elemento 2", "Elemento 3" };
-
-            return View(datos); // Pasamos la lista como modelo
+            if (TempData["Resultados"] is string jsonResultados && !string.IsNullOrEmpty(jsonResultados))
+            {
+                var modelo = JsonConvert.DeserializeObject<ResultadoViewModel>(jsonResultados);
+                return View(modelo);
+            }
+            else
+            {
+                var modeloVacio = new ResultadoViewModel
+                {
+                    MensajeError = "No se encontraron resultados para mostrar. Por favor, carga los archivos primero."
+                };
+                return View(modeloVacio);
+            }
         }
     }
 }

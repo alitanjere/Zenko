@@ -1,17 +1,104 @@
-@model List<string>
+@model Zenko.Models.ResultadoViewModel
+@using System.Linq;
 
-<h2>Resultados</h2>
+@{
+    ViewData["Title"] = "Resultados del Cálculo de Costos";
+}
 
-@if (Model != null && Model.Count > 0)
+<h2>@ViewData["Title"]</h2>
+
+@if (!string.IsNullOrEmpty(Model.MensajeError))
 {
-    <ul>
-    @foreach (var item in Model)
+    <div class="alert alert-warning" role="alert">
+        @Model.MensajeError
+    </div>
+}
+
+@if (Model.TelasDetalle.Any() || Model.AviosDetalle.Any())
+{
+    <h2>Resumen de Costos</h2>
+    <table class="table">
+        <tr>
+            <th>Costo Total de Telas:</th>
+            <td>@Model.CostoTotalTelas.ToString("C")</td>
+        </tr>
+        <tr>
+            <th>Costo Total de Avíos:</th>
+            <td>@Model.CostoTotalAvios.ToString("C")</td>
+        </tr>
+        <tr>
+            <th>Costo Total General:</th>
+            <td><strong>@Model.CostoTotalGeneral.ToString("C")</strong></td>
+        </tr>
+    </table>
+
+    @if (Model.TelasDetalle.Any())
     {
-        <li>@item</li>
+        <h3>Detalle de Telas</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Proveedor</th>
+                    <th class="text-end">Costo por Metro</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tela in Model.TelasDetalle)
+                {
+                    <tr>
+                        <td>@tela.Codigo</td>
+                        <td>@tela.Descripcion</td>
+                        <td>@tela.Proveedor</td>
+                        <td class="text-end">@tela.CostoPorMetro.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
-    </ul>
+    else if (string.IsNullOrEmpty(Model.MensajeError))
+    {
+        <p>No se procesaron datos de telas.</p>
+    }
+
+    @if (Model.AviosDetalle.Any())
+    {
+        <h3>Detalle de Avíos</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Proveedor</th>
+                    <th>Unidad Medida</th>
+                    <th class="text-end">Costo por Unidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var avio in Model.AviosDetalle)
+                {
+                    <tr>
+                        <td>@avio.Codigo</td>
+                        <td>@avio.Descripcion</td>
+                        <td>@avio.Proveedor</td>
+                        <td>@avio.UnidadMedida</td>
+                        <td class="text-end">@avio.CostoUnidad.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else if (string.IsNullOrEmpty(Model.MensajeError))
+    {
+        <p>No se procesaron datos de avíos.</p>
+    }
 }
-else
+else if (string.IsNullOrEmpty(Model.MensajeError)) // Si no hay detalles y no hay un error general
 {
-    <p>No hay datos para mostrar.</p>
+    <p>No hay datos de costos para mostrar. Por favor, cargue los archivos Excel.</p>
 }
+
+<p>
+    <a asp-action="Index" class="btn btn-primary">Volver a Cargar Archivos</a>
+</p>

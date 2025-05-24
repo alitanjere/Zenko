@@ -14,6 +14,9 @@ builder.Services.AddScoped<CalculoService>();
 
 var app = builder.Build();
 
+// Inicializar tipos de insumo base en la BD
+BD.InicializarTiposInsumo();
+
 // Middleware básico
 if (!app.Environment.IsDevelopment())
 {
