@@ -1,4 +1,4 @@
- DATABASE Zenko;
+CREATE DATABASE Zenko;
 GO
 
 -- Usar la base de datos recién creada
