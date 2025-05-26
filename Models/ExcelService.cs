@@ -2,6 +2,7 @@ using OfficeOpenXml;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using Zenko.Models;
 
 namespace Zenko.Services
@@ -13,14 +14,13 @@ namespace Zenko.Services
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         }
 
-        public List<TelaExcel> LeerArchivoTelas(System.IO.Stream stream)
+        public List<TelaExcel> LeerArchivoTelas(Stream stream)
         {
             var telas = new List<TelaExcel>();
             if (stream == null) return telas;
 
             using (var package = new ExcelPackage(stream))
-            {
-                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+            {                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
                 if (worksheet == null) return telas;
 
                 for (int row = 2; ; row++)
@@ -28,27 +28,25 @@ namespace Zenko.Services
                     var codigo = worksheet.Cells[row, 1].Value?.ToString();
                     if (string.IsNullOrWhiteSpace(codigo)) break;
 
-                    var descripcion = worksheet.Cells[row, 2].Value?.ToString();
-                    var costoPorMetroStr = worksheet.Cells[row, 3].Value?.ToString();
-                    var proveedor = worksheet.Cells[row, 4].Value?.ToString();
+                    if (!EsCodigoTela(codigo)) continue;
 
-                    if (decimal.TryParse(costoPorMetroStr, out decimal costoPorMetro))
+                    var costoStr = worksheet.Cells[row, 2].Value?.ToString();
+                    decimal costoPorMetro = ParsearDecimalDesdeString(costoStr);
+
+                    if (costoPorMetro >= 0)
                     {
                         telas.Add(new TelaExcel
                         {
                             Codigo = codigo,
-                            Descripcion = descripcion,
-                            CostoPorMetro = costoPorMetro,
-                            Proveedor = proveedor
+                            CostoPorMetro = costoPorMetro
                         });
                     }
-                    // else: Omitir fila si CostoPorMetro no es un decimal válido
                 }
             }
             return telas;
         }
 
-        public List<AvioExcel> LeerArchivoAvios(System.IO.Stream stream)
+        public List<AvioExcel> LeerArchivoAvios(Stream stream)
         {
             var avios = new List<AvioExcel>();
             if (stream == null) return avios;
@@ -63,26 +61,58 @@ namespace Zenko.Services
                     var codigo = worksheet.Cells[row, 1].Value?.ToString();
                     if (string.IsNullOrWhiteSpace(codigo)) break;
 
-                    var descripcion = worksheet.Cells[row, 2].Value?.ToString();
-                    var costoUnidadStr = worksheet.Cells[row, 3].Value?.ToString();
-                    var unidadMedida = worksheet.Cells[row, 4].Value?.ToString();
-                    var proveedor = worksheet.Cells[row, 5].Value?.ToString();
+                    if (!EsCodigoAvio(codigo)) continue;
 
-                    if (decimal.TryParse(costoUnidadStr, out decimal costoUnidad))
+                    var costoStr = worksheet.Cells[row, 2].Value?.ToString();
+                    decimal costoUnidad = ParsearDecimalDesdeString(costoStr);
+
+                    if (costoUnidad >= 0)
                     {
                         avios.Add(new AvioExcel
                         {
                             Codigo = codigo,
-                            Descripcion = descripcion,
-                            CostoUnidad = costoUnidad,
-                            UnidadMedida = unidadMedida,
-                            Proveedor = proveedor
+                            CostoUnidad = costoUnidad
                         });
                     }
-                    // else: Omitir fila si CostoUnidad no es un decimal válido
                 }
             }
             return avios;
         }
+
+        private decimal ParsearDecimalDesdeString(string valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return -1;
+
+            // Quitar $ y espacios
+            string limpio = valor.Replace("$", "").Trim();
+
+            // Quitar puntos de miles y cambiar coma decimal a punto
+            limpio = limpio.Replace(".", "").Replace(",", ".");
+
+            if (decimal.TryParse(limpio, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal resultado))
+                return resultado;
+
+            return -1; // Indicamos error en parseo
+        }
+        private bool EsCodigoTela(string codigo)
+        {
+            if (string.IsNullOrWhiteSpace(codigo) || codigo.Length < 5) return false;
+            string prefijo = codigo.Substring(0, 3); // por ejemplo, V23, I18, etc.
+            char tipo = codigo[4]; // letra en posición 5
+
+            return (codigo.StartsWith("V") || codigo.StartsWith("I")) && (tipo == 'K' || tipo == 'M');
+        }
+
+        private bool EsCodigoAvio(string codigo)
+        {
+            if (string.IsNullOrWhiteSpace(codigo) || codigo.Length < 5) return false;
+            string prefijo = codigo.Substring(0, 3);
+            char tipo = codigo[4]; // letra en posición 5
+
+            return (codigo.StartsWith("V") || codigo.StartsWith("I")) && tipo == 'A';
+        }
     }
 }
+
+

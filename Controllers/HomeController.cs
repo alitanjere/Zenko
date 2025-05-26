@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Zenko.Models;
 using Zenko.Services;
 using Newtonsoft.Json;
-using System.Threading.Tasks;      // Para Task<>
-using Microsoft.AspNetCore.Http;   // Para IFormFile
-using System.IO;                   // Para MemoryStream
-using System.Collections.Generic;  // Para List<>
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using System.Collections.Generic;
 
 namespace Zenko.Controllers
 {
@@ -29,64 +29,72 @@ namespace Zenko.Controllers
         [HttpPost]
         public async Task<IActionResult> UploadExcel(IFormFile fileTelas, IFormFile fileAvios)
         {
-            if (fileTelas != null && fileAvios != null)
+            if (fileTelas == null || fileAvios == null)
             {
-                using (var telasStream = new MemoryStream())
-                using (var aviosStream = new MemoryStream())
-                {
-                    await fileTelas.CopyToAsync(telasStream);
-                    await fileAvios.CopyToAsync(aviosStream);
-
-                    telasStream.Position = 0;
-                    aviosStream.Position = 0;
-
-                    var telas = _excelService.LeerArchivoTelas(telasStream);
-                    var avios = _excelService.LeerArchivoAvios(aviosStream);
-
-                    // --- Inicio: Integración con BD ---
-                    int idTipoTela = BD.ObtenerIdTipoPorNombre("Tela");
-                    int idTipoAvio = BD.ObtenerIdTipoPorNombre("Avio");
-
-                    if (idTipoTela != 0 && telas != null)
-                    {
-                        foreach (var telaExcel in telas)
-                        {
-                            var nuevoInsumo = new Insumo
-                            {
-                                CodigoInsumo = telaExcel.Codigo,
-                                IdTipoInsumo = idTipoTela,
-                                Costo = telaExcel.CostoPorMetro,
-                                FechaRegistro = System.DateTime.Now
-                            };
-                            BD.InsertarInsumo(nuevoInsumo);
-                        }
-                    }
-
-                    if (idTipoAvio != 0 && avios != null)
-                    {
-                        foreach (var avioExcel in avios)
-                        {
-                            var nuevoInsumo = new Insumo
-                            {
-                                CodigoInsumo = avioExcel.Codigo,
-                                IdTipoInsumo = idTipoAvio,
-                                Costo = avioExcel.CostoUnidad,
-                                FechaRegistro = System.DateTime.Now
-                            };
-                            BD.InsertarInsumo(nuevoInsumo);
-                        }
-                    }
-                    // --- Fin: Integración con BD ---
-
-                    var resultados = _calculoService.CalcularCostos(telas, avios);
-                    TempData["Resultados"] = JsonConvert.SerializeObject(resultados);
-                }
-
-                return RedirectToAction("Resultados");
+                ModelState.AddModelError("", "Debés subir ambos archivos Excel.");
+                return View("Index");
             }
 
-            ModelState.AddModelError("", "Debés subir ambos archivos Excel.");
-            return View("Index");
+            using (var telasStream = new MemoryStream())
+            using (var aviosStream = new MemoryStream())
+            {
+                await fileTelas.CopyToAsync(telasStream);
+                await fileAvios.CopyToAsync(aviosStream);
+
+                telasStream.Position = 0;
+                aviosStream.Position = 0;
+
+                var telas = _excelService.LeerArchivoTelas(telasStream);
+                var avios = _excelService.LeerArchivoAvios(aviosStream);
+
+                int idTipoTela = BD.ObtenerIdTipoPorNombre("Tela");
+                int idTipoAvio = BD.ObtenerIdTipoPorNombre("Avio");
+
+                if (idTipoTela == 0 || idTipoAvio == 0)
+                {
+                    ModelState.AddModelError("", "No se encontraron los tipos de insumo 'Tela' o 'Avio' en la base de datos.");
+                    return View("Index");
+                }
+
+                if (telas != null)
+                {
+                    foreach (var telaExcel in telas)
+                    {
+                        var nuevoInsumo = new Insumo
+                        {
+                            CodigoInsumo = telaExcel.Codigo,
+                            IdTipoInsumo = idTipoTela,
+                            Costo = telaExcel.CostoPorMetro,
+                            FechaRegistro = System.DateTime.Now
+                        };
+                        BD.InsertarInsumo(nuevoInsumo);
+                    }
+                }
+
+                if (avios != null)
+                {
+                    foreach (var avioExcel in avios)
+                    {
+                        var nuevoInsumo = new Insumo
+                        {
+                            CodigoInsumo = avioExcel.Codigo,
+                            IdTipoInsumo = idTipoAvio,
+                            Costo = avioExcel.CostoUnidad,
+                            FechaRegistro = System.DateTime.Now
+                        };
+                        BD.InsertarInsumo(nuevoInsumo);
+                    }
+                }
+
+                var resultados = _calculoService.CalcularCostos(telas, avios);
+
+                // Opcional: guardar resultados en base y devolver el Id
+                // int idResultado = BD.GuardarResultadoCalculo(resultados);
+
+                TempData["Resultados"] = JsonConvert.SerializeObject(resultados);
+            }
+
+            return RedirectToAction("Resultados");
         }
 
         [HttpGet]
