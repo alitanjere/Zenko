@@ -26,19 +26,61 @@
 
 <div class="hero">
     <h1>Bienvenido a Zenko</h1>
-    <p>Cargá tus archivos Excel de Insumos y Avíos</p>
+    <p>Selecciona tus archivos Excel de Telas y Avíos para cargarlos conjuntamente.</p>
 </div>
 
 <div class="upload-card mb-5">
     <form asp-action="UploadExcel" method="post" enctype="multipart/form-data">
         <div class="form-group mb-3">
-            <label for="fileTelas">Archivo Excel de Telas</label>
-            <input type="file" name="fileTelas" class="form-control" required />
+            <label for="files" class="form-label">Selecciona los archivos Excel de Telas y Avíos</label>
+            <input type="file" name="files" id="files" class="form-control" multiple required />
+            <small class="form-text text-muted">Puedes seleccionar ambos archivos a la vez (generalmente manteniendo presionada la tecla Ctrl o Shift al seleccionar).</small>
         </div>
-        <div class="form-group mb-3">
-            <label for="fileAvios">Archivo Excel de Avíos</label>
-            <input type="file" name="fileAvios" class="form-control" required />
+        <div id="selectedFilesList" class="mt-2">
+            <!-- Los nombres de los archivos aparecerán aquí -->
         </div>
-        <button type="submit" class="btn btn-primary btn-lg w-100">Cargar y continuar</button>
+        <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Cargar y continuar</button>
     </form>
 </div>
+
+@section Scripts {
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('files'); // El ID del input de archivos
+        const selectedFilesList = document.getElementById('selectedFilesList'); // El ID del div contenedor
+
+        if (fileInput && selectedFilesList) {
+            fileInput.addEventListener('change', function() {
+                selectedFilesList.innerHTML = ''; // Limpiar la lista anterior
+
+                if (this.files && this.files.length > 0) {
+                    const ul = document.createElement('ul');
+                    ul.className = 'list-group list-group-flush'; // Clases de Bootstrap para estilo minimalista
+
+                    for (let i = 0; i < this.files.length; i++) {
+                        const li = document.createElement('li');
+                        // Usando clases para un estilo más compacto y limpio
+                        li.className = 'list-group-item list-group-item-light py-1 px-2 border-0'; 
+                        
+                        const fileNameSpan = document.createElement('span');
+                        fileNameSpan.textContent = this.files[i].name;
+                        fileNameSpan.className = 'small'; // Texto más pequeño
+
+                        // Opcional: Mostrar un pequeño icono de archivo (ej. de Bootstrap Icons)
+                        // const fileIcon = document.createElement('i');
+                        // fileIcon.className = 'bi bi-file-earmark-text me-2'; // Necesitarías Bootstrap Icons
+                        // li.appendChild(fileIcon);
+
+                        li.appendChild(fileNameSpan);
+                        ul.appendChild(li);
+                    }
+                    selectedFilesList.appendChild(ul);
+                } else {
+                    // Opcional: Mostrar un mensaje si no hay archivos seleccionados después de un cambio
+                    // selectedFilesList.innerHTML = '<p class="text-muted small">Ningún archivo seleccionado.</p>';
+                }
+            });
+        }
+    });
+    </script>
+}
