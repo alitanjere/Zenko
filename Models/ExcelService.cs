@@ -7,6 +7,13 @@ using Zenko.Models;
 
 namespace Zenko.Services
 {
+    public enum ExcelFileType
+    {
+        Unknown,
+        Tela,
+        Avio
+    }
+
     public class ExcelService
     {
         static ExcelService()
@@ -111,6 +118,72 @@ namespace Zenko.Services
             char tipo = codigo[4]; // letra en posición 5
 
             return (codigo.StartsWith("V") || codigo.StartsWith("I")) && tipo == 'A';
+        }
+
+        public ExcelFileType DetectFileType(Stream stream)
+        {
+            if (stream == null || stream.Length == 0)
+            {
+                return ExcelFileType.Unknown;
+            }
+
+            // Ensure the stream is at the beginning if it's seekable
+            if (stream.CanSeek)
+            {
+                stream.Position = 0;
+            }
+
+            using (var package = new ExcelPackage(stream))
+            {
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet == null)
+                {
+                    return ExcelFileType.Unknown;
+                }
+
+                // Check a few rows for codes (e.g., up to 5 data rows, starting from row 2)
+                int telasCount = 0;
+                int aviosCount = 0;
+                int rowsToCheck = 5; // Number of data rows to inspect
+
+                for (int row = 2; row < 2 + rowsToCheck; row++)
+                {
+                    var codigoCell = worksheet.Cells[row, 1].Value;
+                    if (codigoCell == null || string.IsNullOrWhiteSpace(codigoCell.ToString()))
+                    {
+                        // If we hit an empty cell in the first column, assume end of relevant data for detection
+                        break;
+                    }
+                    string codigo = codigoCell.ToString().Trim();
+
+                    if (EsCodigoTela(codigo))
+                    {
+                        telasCount++;
+                    }
+                    if (EsCodigoAvio(codigo)) // Using 'if' instead of 'else if' in case a code could ambiguously match both (though unlikely with current logic)
+                    {
+                        aviosCount++;
+                    }
+                }
+
+                // Restore stream position if it was seekable, so it can be read again by other methods
+                if (stream.CanSeek)
+                {
+                    stream.Position = 0;
+                }
+
+                // Determine file type based on counts
+                if (telasCount > 0 && aviosCount == 0)
+                {
+                    return ExcelFileType.Tela;
+                }
+                if (aviosCount > 0 && telasCount == 0)
+                {
+                    return ExcelFileType.Avio;
+                }
+                // If both are > 0, or both are 0 after checking rows, it's ambiguous or not identifiable by this logic
+                return ExcelFileType.Unknown;
+            }
         }
     }
 }

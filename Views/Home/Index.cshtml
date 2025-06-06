@@ -32,12 +32,8 @@
 <div class="upload-card mb-5">
     <form asp-action="UploadExcel" method="post" enctype="multipart/form-data">
         <div class="form-group mb-3">
-            <label for="fileTelas">Archivo Excel de Telas</label>
-            <input type="file" name="fileTelas" class="form-control" required />
-        </div>
-        <div class="form-group mb-3">
-            <label for="fileAvios">Archivo Excel de Avíos</label>
-            <input type="file" name="fileAvios" class="form-control" required />
+            <label for="excelFile">Archivo Excel (Telas o Avíos)</label>
+            <input type="file" name="excelFile" id="excelFile" class="form-control" required />
         </div>
         <button type="submit" class="btn btn-primary btn-lg w-100">Cargar y continuar</button>
     </form>
