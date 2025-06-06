@@ -1,44 +1,59 @@
 ﻿@{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Subir Archivos Excel";
 }
 
-@section Styles {
-    <style>
-        .hero {
-            background: linear-gradient(to right, #94B9FF 20%, #CDFFD8 80%);
-            border-radius: 12px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
+<h2>Subir Archivos Excel</h2>
 
-        .upload-card {
-            background-color: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            max-width: 600px;
-            margin: auto;
-        }
-    </style>
+<form asp-action="Index" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="archivosExcel" class="form-label">Seleccione uno o más archivos Excel</label>
+        <input type="file" name="archivosExcel" id="archivosExcel" multiple accept=".xls,.xlsx" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Procesar</button>
+</form>
+
+@if (ViewData["Telas"] != null)
+{
+    var telas = (List<Zenko.Models.TelaExcel>)ViewData["Telas"];
+    <h3>Telas encontradas</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Costo por Metro</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tela in telas)
+            {
+                <tr>
+                    <td>@tela.Codigo</td>
+                    <td>@tela.CostoPorMetro.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
 
-<div class="hero">
-    <h1>Bienvenido a Zenko</h1>
-    <p>Cargá tus archivos Excel de Insumos y Avíos</p>
-</div>
-
-<div class="upload-card mb-5">
-    <form asp-action="UploadExcel" method="post" enctype="multipart/form-data">
-        <div class="form-group mb-3">
-            <label for="fileTelas">Archivo Excel de Telas</label>
-            <input type="file" name="fileTelas" class="form-control" required />
-        </div>
-        <div class="form-group mb-3">
-            <label for="fileAvios">Archivo Excel de Avíos</label>
-            <input type="file" name="fileAvios" class="form-control" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-lg w-100">Cargar y continuar</button>
-    </form>
-</div>
+@if (ViewData["Avios"] != null)
+{
+    var avios = (List<Zenko.Models.AvioExcel>)ViewData["Avios"];
+    <h3>Avíos encontrados</h3>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Costo por Unidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var avio in avios)
+            {
+                <tr>
+                    <td>@avio.Codigo</td>
+                    <td>@avio.CostoUnidad.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
