@@ -33,96 +33,71 @@ CREATE TABLE ProductoInsumo (
     FOREIGN KEY (IdProducto) REFERENCES Productos(IdProducto),
     FOREIGN KEY (CodigoInsumo) REFERENCES Insumos(CodigoInsumo)
 );
+GO;
 
-
---Inserts futuros
---INSERT INTO Tipos_Insumo (IdTipoInsumo, Nombre, CodigoPrefijo) VALUES (1, 'Tela', 'V23');
---INSERT INTO Tipos_Insumo (IdTipoInsumo, Nombre, CodigoPrefijo) VALUES (2, 'Avio', 'I18');
-
-public (List<TelaExcel> telas, List<AvioExcel> avios) LeerArchivoInsumos(Stream stream)
-    {
-        var telas = new List<TelaExcel>();
-        var avios = new List<AvioExcel>();
-
-        if (stream == null) return (telas, avios);
-
-        using (var package = new ExcelPackage(stream))
-        {
-            var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-            if (worksheet == null) return (telas, avios);
-
-            for (int row = 2; ; row++)
-            {
-                var codigo = worksheet.Cells[row, 1].Value?.ToString();
-                if (string.IsNullOrWhiteSpace(codigo)) break;
-
-                string tipoInsumo = ObtenerTipoDesdeBD(codigo);
-                if (string.IsNullOrEmpty(tipoInsumo)) continue;
-
-                var costoStr = worksheet.Cells[row, 2].Value?.ToString();
-                decimal costo = ParsearDecimalDesdeString(costoStr);
-
-                if (costo < 0) continue;
-
-                if (tipoInsumo == "Tela")
-                {
-                    telas.Add(new TelaExcel
-                    {
-                        Codigo = codigo,
-                        CostoPorMetro = costo
-                    });
-                }
-                else if (tipoInsumo == "Avio")
-                {
-                    avios.Add(new AvioExcel
-                    {
-                        Codigo = codigo,
-                        CostoUnidad = costo
-                    });
-                }
-            }
-        }
-
-        return (telas, avios);
-    }
-
-    private string ObtenerTipoDesdeBD(string codigo)
-    {
-        using (var connection = new SqlConnection(_connectionString))
-        {
-            var result = connection.QueryFirstOrDefault<int?>(
-                "dbo.ObtenerOInsertarTipoInsumoPorCodigo",
-                new { CodigoInsumo = codigo },
-                commandType: CommandType.StoredProcedure
-            );
-
-            if (result.HasValue)
-            {
-                string prefijo = $"{codigo[0]}{codigo[3]}";
-                return prefijo switch
-                {
-                    "VK" or "VM" or "IK" or "IM" => "Tela",
-                    "VA" or "IA" => "Avio",
-                    _ => null
-                };
-            }
-
-            return null;
-        }
-    }
-
-CREATE PROCEDURE dbo.InsertarInsumo
-    @CodigoInsumo NVARCHAR(20),
-    @IdTipoInsumo INT,
-    @Costo DECIMAL(10, 2),
-    @FechaRegistro DATE
+CREATE PROCEDURE dbo.ObtenerOInsertarTipoInsumoPorCodigo
+@CodigoInsumo NVARCHAR(20)
 AS
 BEGIN
-    SET NOCOUNT ON;
+SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM Insumos WHERE CodigoInsumo = @CodigoInsumo)
-    BEGIN
-        INSERT INTO Insumos (CodigoInsumo, IdTipoInsumo, Costo, FechaRegistro)
-        VALUES (@CodigoInsumo, @IdTipoInsumo, @Costo, @FechaRegistro);
-    END
+IF LEN(@CodigoInsumo) < 4
+BEGIN
+RAISERROR('CodigoInsumo demasiado corto.', 16, 1);
+RETURN;
+END
+
+DECLARE @PrimeraLetra CHAR(1) = LEFT(@CodigoInsumo, 1);
+DECLARE @TercerLetra CHAR(1) = SUBSTRING(@CodigoInsumo, 4, 1);
+DECLARE @Prefijo VARCHAR(2) = @PrimeraLetra + @TercerLetra;
+
+DECLARE @Tipo NVARCHAR(10);
+DECLARE @IdTipoInsumo INT;
+
+-- Determinar tipo según reglas
+IF (@Prefijo = 'VK' OR @Prefijo = 'VM' OR @Prefijo = 'IK' OR @Prefijo = 'IM')
+SET @Tipo = 'Tela';
+ELSE IF (@Prefijo = 'VA' OR @Prefijo = 'IA')
+SET @Tipo = 'Avio';
+ELSE
+BEGIN
+RAISERROR('Prefijo no valido para tipo de insumo.', 16, 1);
+RETURN;
+END
+
+-- Buscar IdTipoInsumo existente para el prefijo
+SELECT @IdTipoInsumo = IdTipoInsumo FROM Tipos_Insumo WHERE CodigoPrefijo = @Prefijo;
+
+-- Si no existe, insertarlo
+IF @IdTipoInsumo IS NULL
+BEGIN
+-- Insertar con nuevo IdTipoInsumo (auto incrementado +1 del max)
+DECLARE @NuevoId INT = ISNULL((SELECT MAX(IdTipoInsumo) FROM Tipos_Insumo), 0) + 1;
+
+INSERT INTO Tipos_Insumo (IdTipoInsumo, Nombre, CodigoPrefijo)
+VALUES (@NuevoId, @Tipo, @Prefijo);
+
+SET @IdTipoInsumo = @NuevoId;
+END
+
+-- Devolver el IdTipoInsumo
+SELECT @IdTipoInsumo AS IdTipoInsumo;
+END;
+EXEC dbo.ObtenerOInsertarTipoInsumoPorCodigo @CodigoInsumo = 'V23K1234';
+go;
+
+CREATE PROCEDURE dbo.InsertarInsumo
+@CodigoInsumo NVARCHAR(20),
+@IdTipoInsumo INT,
+@Costo DECIMAL(10, 2),
+@FechaRegistro DATE
+AS
+BEGIN
+SET NOCOUNT ON;
+
+IF NOT EXISTS (SELECT 1 FROM Insumos WHERE CodigoInsumo = @CodigoInsumo)
+BEGIN
+INSERT INTO Insumos (CodigoInsumo, IdTipoInsumo, Costo, FechaRegistro)
+VALUES (@CodigoInsumo, @IdTipoInsumo, @Costo, @FechaRegistro);
+END
 END;

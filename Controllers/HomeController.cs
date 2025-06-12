@@ -1,17 +1,24 @@
 using Microsoft.AspNetCore.Mvc;
-using Zenko.Services;
-using Zenko.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Zenko.Services;
+using Zenko.Models;
+using System.Data;
+using System.Data.SqlClient;
+using System;
+
 
 public class HomeController : Controller
 {
     private readonly ExcelService _excelService;
+    private readonly IConfiguration _configuration;
 
-    public HomeController(ExcelService excelService)
+    public HomeController(ExcelService excelService, IConfiguration configuration)
     {
         _excelService = excelService;
+        _configuration = configuration;
     }
 
     [HttpGet]
@@ -29,15 +36,61 @@ public class HomeController : Controller
             return View();
         }
 
-        // Llamamos al método unificado que devuelve telas y avíos juntos
         var (telas, avios) = _excelService.LeerArchivos(archivosExcel);
 
-        // Aquí podrías hacer lo que necesites con las listas telas y avios
-        // Por ejemplo, guardarlas en base de datos, o mostrarlas en la vista
+        // Inserción directa a la base desde el controller
+        using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+
+        foreach (var tela in telas)
+        {
+            int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, tela.Codigo);
+            await InsertarInsumo(connection, new Insumo
+            {
+                CodigoInsumo = tela.Codigo,
+                IdTipoInsumo = idTipoInsumo,
+                Costo = tela.CostoPorMetro,
+                FechaRegistro = DateTime.Today
+            });
+        }
+
+        foreach (var avio in avios)
+        {
+            int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, avio.Codigo);
+            await InsertarInsumo(connection, new Insumo
+            {
+                CodigoInsumo = avio.Codigo,
+                IdTipoInsumo = idTipoInsumo,
+                Costo = avio.CostoUnidad,
+                FechaRegistro = DateTime.Today
+            });
+        }
 
         ViewData["Telas"] = telas;
         ViewData["Avios"] = avios;
 
         return View();
+    }
+
+    // Método auxiliar para llamar al SP ObtenerOInsertarTipoInsumoPorCodigo
+    private async Task<int> ObtenerOInsertarTipoInsumo(SqlConnection connection, string codigoInsumo)
+    {
+        using var command = new SqlCommand("dbo.ObtenerOInsertarTipoInsumoPorCodigo", connection);
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@CodigoInsumo", codigoInsumo);
+        var result = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(result);
+    }
+
+    // Método auxiliar para llamar al SP InsertarInsumo
+    private async Task InsertarInsumo(SqlConnection connection, Insumo insumo)
+    {
+        using var command = new SqlCommand("dbo.InsertarInsumo", connection);
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@CodigoInsumo", insumo.CodigoInsumo);
+        command.Parameters.AddWithValue("@IdTipoInsumo", insumo.IdTipoInsumo);
+        command.Parameters.AddWithValue("@Costo", insumo.Costo);
+        command.Parameters.AddWithValue("@FechaRegistro", insumo.FechaRegistro);
+        await command.ExecuteNonQueryAsync();
     }
 }
