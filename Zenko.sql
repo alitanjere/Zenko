@@ -100,4 +100,14 @@ BEGIN
 INSERT INTO Insumos (CodigoInsumo, IdTipoInsumo, Costo, FechaRegistro)
 VALUES (@CodigoInsumo, @IdTipoInsumo, @Costo, @FechaRegistro);
 END
+
+ELSE
+    BEGIN
+        UPDATE Insumos
+        SET 
+            IdTipoInsumo = @IdTipoInsumo,
+            Costo = @Costo,
+            FechaRegistro = @FechaRegistro
+        WHERE CodigoInsumo = @CodigoInsumo;
+    END
 END;
