@@ -14,7 +14,7 @@ CREATE TABLE Insumos (
     CodigoInsumo nVARCHAR(20) PRIMARY KEY,
     IdTipoInsumo INT NOT NULL,
     Costo DECIMAL(10, 2),
-    FechaRegistro DATE NOT NULL,
+    FechaRegistro DATETIME NOT NULL,
     FOREIGN KEY (IdTipoInsumo) REFERENCES Tipos_Insumo(IdTipoInsumo)
 );
 
@@ -32,6 +32,13 @@ CREATE TABLE ProductoInsumo (
     PRIMARY KEY (IdProducto, CodigoInsumo),
     FOREIGN KEY (IdProducto) REFERENCES Productos(IdProducto),
     FOREIGN KEY (CodigoInsumo) REFERENCES Insumos(CodigoInsumo)
+);
+
+CREATE TABLE Historico_Insumos (
+    CodigoInsumo NVARCHAR(20),
+    IdTipoInsumo INT,
+    Costo DECIMAL(10, 2),
+    FechaRegistro DATE
 );
 GO;
 
@@ -88,26 +95,30 @@ go;
 
 CREATE PROCEDURE dbo.InsertarInsumo
 @CodigoInsumo NVARCHAR(20),
-@IdTipoInsumo INT,
-@Costo DECIMAL(10, 2),
-@FechaRegistro DATE
+    @IdTipoInsumo INT,
+    @Costo DECIMAL(10, 2),
+    @FechaRegistro DATETIME
 AS
 BEGIN
-SET NOCOUNT ON;
+    SET NOCOUNT ON;
 
-IF NOT EXISTS (SELECT 1 FROM Insumos WHERE CodigoInsumo = @CodigoInsumo)
-BEGIN
-INSERT INTO Insumos (CodigoInsumo, IdTipoInsumo, Costo, FechaRegistro)
-VALUES (@CodigoInsumo, @IdTipoInsumo, @Costo, @FechaRegistro);
-END
-
-ELSE
+    IF EXISTS (SELECT 1 FROM Insumos WHERE CodigoInsumo = @CodigoInsumo)
     BEGIN
+        INSERT INTO Historico_Insumos
+        SELECT CodigoInsumo, IdTipoInsumo, Costo, FechaRegistro
+        FROM Insumos
+        WHERE CodigoInsumo = @CodigoInsumo;
+
         UPDATE Insumos
         SET 
             IdTipoInsumo = @IdTipoInsumo,
             Costo = @Costo,
             FechaRegistro = @FechaRegistro
         WHERE CodigoInsumo = @CodigoInsumo;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO Insumos (CodigoInsumo, IdTipoInsumo, Costo, FechaRegistro)
+        VALUES (@CodigoInsumo, @IdTipoInsumo, @Costo, @FechaRegistro);
     END
 END;
