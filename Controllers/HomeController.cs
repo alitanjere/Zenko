@@ -29,48 +29,57 @@ public class HomeController : Controller
 
     [HttpPost]
     public async Task<IActionResult> Index(List<IFormFile> archivosExcel)
+{
+    if (archivosExcel == null || archivosExcel.Count == 0)
     {
-        if (archivosExcel == null || archivosExcel.Count == 0)
-        {
-            ModelState.AddModelError("", "Por favor, suba al menos un archivo Excel.");
-            return View();
-        }
-
-        var (telas, avios) = _excelService.LeerArchivos(archivosExcel);
-
-        // Inserción directa a la base desde el controller
-        using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-        await connection.OpenAsync();
-
-        foreach (var tela in telas)
-        {
-            int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, tela.Codigo);
-            await InsertarInsumo(connection, new Insumo
-            {
-                CodigoInsumo = tela.Codigo,
-                IdTipoInsumo = idTipoInsumo,
-                Costo = tela.CostoPorMetro,
-                FechaRegistro = DateTime.Today
-            });
-        }
-
-        foreach (var avio in avios)
-        {
-            int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, avio.Codigo);
-            await InsertarInsumo(connection, new Insumo
-            {
-                CodigoInsumo = avio.Codigo,
-                IdTipoInsumo = idTipoInsumo,
-                Costo = avio.CostoUnidad,
-                FechaRegistro = DateTime.Today
-            });
-        }
-
-        ViewData["Telas"] = telas;
-        ViewData["Avios"] = avios;
-
+        ModelState.AddModelError("", "Por favor, suba al menos un archivo Excel.");
         return View();
     }
+
+    var (telas, avios) = _excelService.LeerArchivos(archivosExcel);
+
+    using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+    await connection.OpenAsync();
+
+    // 1) Mover todo lo que hay en Insumos a Historico_Insumos y vaciar Insumos
+    var moverAHistorico = new SqlCommand(@"
+        INSERT INTO Historico_Insumos
+        SELECT * FROM Insumos;
+        DELETE FROM Insumos;", connection);
+
+    await moverAHistorico.ExecuteNonQueryAsync();
+
+    // 2) Insertar TELAS
+    foreach (var tela in telas)
+    {
+        int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, tela.Codigo);
+        await InsertarInsumo(connection, new Insumo
+        {
+            CodigoInsumo = tela.Codigo,
+            IdTipoInsumo = idTipoInsumo,
+            Costo = tela.CostoPorMetro,
+            FechaRegistro = DateTime.Now
+        });
+    }
+
+    // 3) Insertar AVÍOS - Igual que con telas, no olvides hacer esto
+    foreach (var avio in avios)
+    {
+        int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, avio.Codigo);
+        await InsertarInsumo(connection, new Insumo
+        {
+            CodigoInsumo = avio.Codigo,
+            IdTipoInsumo = idTipoInsumo,
+            Costo = avio.CostoUnidad,
+            FechaRegistro = DateTime.Now
+        });
+    }
+
+    ViewData["Telas"] = telas;
+    ViewData["Avios"] = avios;
+
+    return View();
+}
 
     // Método auxiliar para llamar al SP ObtenerOInsertarTipoInsumoPorCodigo
     private async Task<int> ObtenerOInsertarTipoInsumo(SqlConnection connection, string codigoInsumo)
