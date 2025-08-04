@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using Zenko.Services;
 using Zenko.Models;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System;
+using System.Linq;
 
 
 public class HomeController : Controller
