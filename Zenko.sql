@@ -117,3 +117,73 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE dbo.UpsertProducto
+    @CodigoProducto NVARCHAR(20),
+    @NombreProducto NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @ProductoID INT;
+
+    SELECT @ProductoID = IdProducto FROM Productos WHERE CodigoProducto = @CodigoProducto;
+
+    IF @ProductoID IS NOT NULL
+    BEGIN
+        -- Actualizar el producto existente
+        UPDATE Productos
+        SET Nombre = @NombreProducto
+        WHERE IdProducto = @ProductoID;
+    END
+    ELSE
+    BEGIN
+        -- Insertar el nuevo producto
+        INSERT INTO Productos (CodigoProducto, Nombre)
+        VALUES (@CodigoProducto, @NombreProducto);
+        SET @ProductoID = SCOPE_IDENTITY();
+    END
+
+    -- Devolver el ID del producto insertado o actualizado
+    SELECT @ProductoID AS IdProducto;
+END;
+GO
+
+CREATE PROCEDURE dbo.UpsertProductoInsumo
+    @CodigoProducto NVARCHAR(20),
+    @CodigoInsumo NVARCHAR(20),
+    @Cantidad DECIMAL(10, 2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @IdProducto INT;
+    SELECT @IdProducto = IdProducto FROM Productos WHERE CodigoProducto = @CodigoProducto;
+
+    IF @IdProducto IS NULL
+    BEGIN
+        RAISERROR ('Producto con CodigoProducto %s no encontrado.', 16, 1, @CodigoProducto);
+        RETURN;
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM Insumos WHERE CodigoInsumo = @CodigoInsumo)
+    BEGIN
+        RAISERROR ('Insumo con CodigoInsumo %s no encontrado.', 16, 1, @CodigoInsumo);
+        RETURN;
+    END
+
+    IF EXISTS (SELECT 1 FROM ProductoInsumo WHERE IdProducto = @IdProducto AND CodigoInsumo = @CodigoInsumo)
+    BEGIN
+        -- Actualizar la cantidad
+        UPDATE ProductoInsumo
+        SET Cantidad = @Cantidad
+        WHERE IdProducto = @IdProducto AND CodigoInsumo = @CodigoInsumo;
+    END
+    ELSE
+    BEGIN
+        -- Insertar la nueva relación
+        INSERT INTO ProductoInsumo (IdProducto, CodigoInsumo, Cantidad)
+        VALUES (@IdProducto, @CodigoInsumo, @Cantidad);
+    END
+END;
+GO
+

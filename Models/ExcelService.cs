@@ -151,5 +151,49 @@ namespace Zenko.Services
 
             return tipo == 'A';
         }
+
+        public List<ProductoInsumoExcel> LeerProductoInsumos(List<IFormFile> archivosExcel)
+        {
+            var relaciones = new List<ProductoInsumoExcel>();
+
+            foreach (var archivo in archivosExcel)
+            {
+                using var stream = new MemoryStream();
+                archivo.CopyTo(stream);
+                stream.Position = 0;
+
+                using var package = new ExcelPackage(stream);
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet == null) continue;
+
+                for (int row = 2; ; row++)
+                {
+                    var codigoProducto = worksheet.Cells[row, 1].Value?.ToString();
+                    var nombreProducto = worksheet.Cells[row, 2].Value?.ToString();
+                    var codigoInsumo = worksheet.Cells[row, 3].Value?.ToString();
+                    var cantidadStr = worksheet.Cells[row, 4].Value?.ToString();
+
+                    if (string.IsNullOrWhiteSpace(codigoProducto) ||
+                        string.IsNullOrWhiteSpace(nombreProducto) ||
+                        string.IsNullOrWhiteSpace(codigoInsumo) ||
+                        string.IsNullOrWhiteSpace(cantidadStr))
+                    {
+                        break;
+                    }
+
+                    decimal cantidad = ParsearDecimalDesdeString(cantidadStr);
+                    if (cantidad < 0) continue;
+
+                    relaciones.Add(new ProductoInsumoExcel
+                    {
+                        CodigoProducto = codigoProducto.Trim(),
+                        NombreProducto = nombreProducto.Trim(),
+                        CodigoInsumo = codigoInsumo.Trim(),
+                        Cantidad = cantidad
+                    });
+                }
+            }
+            return relaciones;
+        }
     }
 }
