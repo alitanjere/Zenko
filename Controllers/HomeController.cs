@@ -27,6 +27,12 @@ public class HomeController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult SubirProductos()
+    {
+        return View();
+    }
+
     [HttpPost]
     public async Task<IActionResult> Index(List<IFormFile> archivosExcel)
 {
@@ -41,15 +47,7 @@ public class HomeController : Controller
     using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
     await connection.OpenAsync();
 
-    // 1) Mover todo lo que hay en Insumos a Historico_Insumos y vaciar Insumos
-    var moverAHistorico = new SqlCommand(@"
-        INSERT INTO Historico_Insumos
-        SELECT * FROM Insumos;
-        DELETE FROM Insumos;", connection);
-
-    await moverAHistorico.ExecuteNonQueryAsync();
-
-    // 2) Insertar TELAS
+    // Insertar TELAS (actualizar si existen)
     foreach (var tela in telas)
     {
         int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, tela.Codigo);
@@ -62,7 +60,7 @@ public class HomeController : Controller
         });
     }
 
-    // 3) Insertar AVÍOS - Igual que con telas, no olvides hacer esto
+    // Insertar AVÍOS (actualizar si existen)
     foreach (var avio in avios)
     {
         int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, avio.Codigo);
@@ -100,6 +98,61 @@ public class HomeController : Controller
         command.Parameters.AddWithValue("@IdTipoInsumo", insumo.IdTipoInsumo);
         command.Parameters.AddWithValue("@Costo", insumo.Costo);
         command.Parameters.AddWithValue("@FechaRegistro", insumo.FechaRegistro);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SubirProductos(List<IFormFile> archivosExcel)
+    {
+        if (archivosExcel == null || archivosExcel.Count == 0)
+        {
+            ModelState.AddModelError("", "Por favor, suba al menos un archivo Excel de productos.");
+            return View();
+        }
+
+        var relaciones = _excelService.LeerProductoInsumos(archivosExcel);
+
+        using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+
+        // Agrupar por producto para asegurar que cada producto se inserte/actualice una sola vez
+        var productosUnicos = relaciones
+            .GroupBy(r => r.CodigoProducto)
+            .Select(g => g.First())
+            .ToList();
+
+        foreach (var producto in productosUnicos)
+        {
+            await UpsertProducto(connection, new ProductoExcel { CodigoProducto = producto.CodigoProducto, NombreProducto = producto.NombreProducto });
+        }
+
+        // Ahora, insertar/actualizar las relaciones
+        foreach (var relacion in relaciones)
+        {
+            await UpsertProductoInsumo(connection, relacion);
+        }
+
+        ViewData["RelacionesProcesadas"] = relaciones;
+        return View();
+    }
+
+    private async Task<int> UpsertProducto(SqlConnection connection, ProductoExcel producto)
+    {
+        using var command = new SqlCommand("dbo.UpsertProducto", connection);
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@CodigoProducto", producto.CodigoProducto);
+        command.Parameters.AddWithValue("@NombreProducto", producto.NombreProducto);
+        var result = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(result);
+    }
+
+    private async Task UpsertProductoInsumo(SqlConnection connection, ProductoInsumoExcel relacion)
+    {
+        using var command = new SqlCommand("dbo.UpsertProductoInsumo", connection);
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@CodigoProducto", relacion.CodigoProducto);
+        command.Parameters.AddWithValue("@CodigoInsumo", relacion.CodigoInsumo);
+        command.Parameters.AddWithValue("@Cantidad", relacion.Cantidad);
         await command.ExecuteNonQueryAsync();
     }
 }

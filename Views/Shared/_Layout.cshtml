@@ -14,8 +14,18 @@
 </head>
 <body>
     <header>
-        <nav class="navbar px-4">
-            <a class="navbar-brand" href="#">Zenko</a>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm px-4">
+            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Zenko</a>
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Subir Insumos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="SubirProductos">Subir Productos</a>
+                    </li>
+                </ul>
+            </div>
             <div>
                 <img src="~/img/Zenko.png" alt="Logo Zenko" style="height: 50px;" />
             </div>
