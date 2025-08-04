@@ -1,87 +1,82 @@
-/* Global Styles */
+html {
+  font-size: 16px;
+}
+
 body {
-    font-family: 'Poppins', sans-serif;
-    background-color: #F8F9FA;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: #F4F6F8;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
 }
 
 main {
     flex: 1;
 }
 
-/* Navbar */
 .navbar {
-    background-color: #FFFFFF !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: linear-gradient(to right, #94B9FF, #CDFFD8);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 0.8rem 1.5rem;
 }
 
 .navbar-brand {
-    font-weight: 600; /* Poppins bold */
+    font-size: 1.8rem;
+    font-weight: 600;
     color: #2C3E50 !important;
 }
 
-/* Links */
+.main-container {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.footer {
+    background-color: #FFFFFF;
+    padding: 1.5rem 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: auto;
+    border-top: 1px solid #e9ecef !important;
+}
+
+/* General Link Styles */
 a {
-    color: #4A90E2;
+    color: #5A8DDE;
+    text-decoration: none;
     transition: color 0.3s ease;
 }
 
 a:hover {
-    color: #357ABD;
-    text-decoration: none;
+    color: #3e6ab3;
 }
 
-/* Buttons */
+/* Button Styles */
 .btn-primary {
+    background-color: #5A8DDE;
+    border-color: #5A8DDE;
     color: #fff;
-    background-color: #4A90E2;
-    border-color: #4A90E2;
-    font-weight: 400;
-    padding: 10px 25px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    font-weight: 500;
+    padding: 12px 30px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 .btn-primary:hover {
+    background-color: #4a78c8;
+    border-color: #4a78c8;
     color: #fff;
-    background-color: #357ABD;
-    border-color: #357ABD;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Remove bootstrap outline on focus for better look */
 .btn:focus, .form-control:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.4) !important;
-}
-
-
-/* Footer */
-.footer {
-    background-color: #FFFFFF;
-    padding: 20px 0;
-    width: 100%;
-    text-align: center;
-    line-height: 20px; /* Adjusted line-height */
-}
-
-/* Utilities from original file that are still useful */
-.border-top {
-  border-top: 1px solid #dee2e6;
-}
-.border-bottom {
-  border-bottom: 1px solid #dee2e6;
-}
-.box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
-}
-.nav-pills .nav-link.active,
-.nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #4A90E2;
-  border-color: #4A90E2;
+    box-shadow: 0 0 0 3px rgba(90, 141, 222, 0.3) !important;
 }
