@@ -8,7 +8,7 @@ using System.Linq;
 
 public static class BD
 {
-    private static string connectionString = "Server=localhost;Database=Zenko;Trusted_Connection=True;";
+    private static string connectionString = "Server=localhost;Database=Zenko;Trusted_Connection=True;TrustServerCertificate=True;";
 
   public static void InsertarInsumo(Insumo insumo)
 {
