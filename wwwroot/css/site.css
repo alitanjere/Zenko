@@ -1,21 +1,97 @@
-/* En wwwroot/css/site.css o en un archivo CSS personalizado */
-
-.container {
-  text-align: center;
-  margin-top: 50px;
+/* Card Style */
+.card {
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    padding: 30px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    border: none;
 }
 
-form {
-  margin-top: 20px;
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2C3E50;
 }
 
-input[type="file"] {
-  display: block;
-  margin: 0 auto;
-  margin-bottom: 20px;
+
+/* Custom File Upload */
+.file-upload-wrapper {
+    border: 2px dashed #4A90E2;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    background-color: #F8F9FA;
+    position: relative;
+    overflow: hidden;
 }
 
-button {
-  padding: 15px 30px;
-  font-size: 18px;
+.file-upload-wrapper:hover {
+    background-color: #E9F2FF;
+    border-color: #357ABD;
+}
+
+.file-upload-wrapper .file-upload-label {
+    font-weight: 400;
+    color: #4A90E2;
+}
+
+.file-upload-wrapper input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+#fileName {
+    margin-top: 15px;
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+
+/* Tables */
+.table {
+    margin-top: 20px;
+}
+
+.table thead {
+    background-color: #4A90E2;
+    color: #FFFFFF;
+}
+
+.table th {
+    font-weight: 600;
+    border: none;
+}
+
+.table td{
+    border-top: 1px solid #dee2e6;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd)>* {
+    --bs-table-accent-bg: rgba(74, 144, 226, 0.05);
+}
+
+/* General button styling */
+.btn-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn {
+    width: auto;
+    min-width: 200px;
+    padding: 12px;
+    font-size: 1.1rem;
 }

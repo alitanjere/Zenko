@@ -1,67 +1,87 @@
-﻿/* Fondo general blanco y limpio */
+/* Global Styles */
 body {
-  min-height: 100vh;
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Poppins', sans-serif;
+    background-color: #F8F9FA;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
 }
 
-/* Navbar con degradé invertido */
+main {
+    flex: 1;
+}
+
+/* Navbar */
 .navbar {
-  background: linear-gradient(to right, #94B9FF 20%, #CDFFD8 80%) !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-
-/* Título Zenko */
 .navbar-brand {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #000;
+    font-weight: 600; /* Poppins bold */
+    color: #2C3E50 !important;
 }
 
-/* Logo agrandado */
-.navbar img {
-  height: 100px;
-}
-
-/* Enlaces generales */
+/* Links */
 a {
-  color: #0077cc;
-  text-decoration: none;
+    color: #4A90E2;
+    transition: color 0.3s ease;
 }
 
-/* Botones primarios */
+a:hover {
+    color: #357ABD;
+    text-decoration: none;
+}
+
+/* Buttons */
 .btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+    color: #fff;
+    background-color: #4A90E2;
+    border-color: #4A90E2;
+    font-weight: 400;
+    padding: 10px 25px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Botones activos */
-.nav-pills .nav-link.active,
-.nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+.btn-primary:hover {
+    color: #fff;
+    background-color: #357ABD;
+    border-color: #357ABD;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* Utilidades */
+/* Remove bootstrap outline on focus for better look */
+.btn:focus, .form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.4) !important;
+}
+
+
+/* Footer */
+.footer {
+    background-color: #FFFFFF;
+    padding: 20px 0;
+    width: 100%;
+    text-align: center;
+    line-height: 20px; /* Adjusted line-height */
+}
+
+/* Utilities from original file that are still useful */
 .border-top {
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid #dee2e6;
 }
 .border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid #dee2e6;
 }
 .box-shadow {
   box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
 }
-button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
-}
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  color: #fff;
+  background-color: #4A90E2;
+  border-color: #4A90E2;
 }
