@@ -117,7 +117,48 @@ public class HomeController : Controller
         using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
         await connection.OpenAsync();
 
-        // Agrupar por producto para asegurar que cada producto se inserte/actualice una sola vez
+        // 1. Obtener todos los insumos únicos del archivo Excel
+        var codigosInsumoUnicos = relaciones.Select(r => r.CodigoInsumo).Distinct().ToList();
+
+        // 2. Identificar qué insumos no existen en la base de datos
+        var dt = new DataTable();
+        dt.Columns.Add("CodigoInsumo", typeof(string));
+        foreach (var codigo in codigosInsumoUnicos)
+        {
+            dt.Rows.Add(codigo);
+        }
+
+        var insumosACrear = new List<string>();
+        using (var command = new SqlCommand("dbo.FiltrarInsumosNoExistentes", connection))
+        {
+            command.CommandType = CommandType.StoredProcedure;
+            var tvpParam = command.Parameters.AddWithValue("@CodigosInsumo", dt);
+            tvpParam.SqlDbType = SqlDbType.Structured;
+            tvpParam.TypeName = "dbo.CodigoInsumoList";
+
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    insumosACrear.Add(reader.GetString(0));
+                }
+            }
+        }
+
+        // 3. Crear los insumos no existentes con costo 0
+        foreach (var codigoInsumo in insumosACrear)
+        {
+            int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, codigoInsumo);
+            await InsertarInsumo(connection, new Insumo
+            {
+                CodigoInsumo = codigoInsumo,
+                IdTipoInsumo = idTipoInsumo,
+                Costo = 0, // Costo por defecto
+                FechaRegistro = DateTime.Now
+            });
+        }
+
+        // 4. Agrupar por producto para asegurar que cada producto se inserte/actualice una sola vez
         var productosUnicos = relaciones
             .GroupBy(r => r.CodigoProducto)
             .Select(g => g.First())
@@ -128,7 +169,7 @@ public class HomeController : Controller
             await UpsertProducto(connection, new ProductoExcel { CodigoProducto = producto.CodigoProducto, NombreProducto = producto.NombreProducto });
         }
 
-        // Ahora, insertar/actualizar las relaciones
+        // 5. Ahora, insertar/actualizar las relaciones producto-insumo
         foreach (var relacion in relaciones)
         {
             await UpsertProductoInsumo(connection, relacion);

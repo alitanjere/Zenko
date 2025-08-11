@@ -100,5 +100,4 @@ public static class BD
             return conexion.Query<TipoInsumo>("SELECT * FROM Tipos_Insumo").ToList();
         }
     }
-
 }
