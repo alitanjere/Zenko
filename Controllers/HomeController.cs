@@ -9,6 +9,7 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Linq;
+using Dapper;
 
 
 public class HomeController : Controller
@@ -155,5 +156,29 @@ public class HomeController : Controller
         command.Parameters.AddWithValue("@CodigoInsumo", relacion.CodigoInsumo);
         command.Parameters.AddWithValue("@Cantidad", relacion.Cantidad);
         await command.ExecuteNonQueryAsync();
+    }
+
+    public async Task<IActionResult> Resultados()
+    {
+        List<ReporteFinalViewModel> model;
+        using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            model = (await connection.QueryAsync<ReporteFinalViewModel>("ObtenerReporteFinal", commandType: CommandType.StoredProcedure)).ToList();
+        }
+        return View(model);
+    }
+
+    public async Task<IActionResult> DescargarResultados()
+    {
+        List<ReporteFinalViewModel> model;
+        using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            model = (await connection.QueryAsync<ReporteFinalViewModel>("ObtenerReporteFinal", commandType: CommandType.StoredProcedure)).ToList();
+        }
+
+        byte[] fileContents = _excelService.CrearExcelReporteFinal(model);
+        return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReporteFinalCostos.xlsx");
     }
 }

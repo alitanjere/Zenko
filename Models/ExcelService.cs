@@ -195,5 +195,38 @@ namespace Zenko.Services
             }
             return relaciones;
         }
+
+        public byte[] CrearExcelReporteFinal(List<ReporteFinalViewModel> reporte)
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Reporte Final");
+
+                // Encabezados
+                worksheet.Cells[1, 1].Value = "Producto";
+                worksheet.Cells[1, 2].Value = "Código Producto";
+                worksheet.Cells[1, 3].Value = "Código Insumo";
+                worksheet.Cells[1, 4].Value = "Costo Insumo";
+                worksheet.Cells[1, 5].Value = "Cantidad";
+                worksheet.Cells[1, 6].Value = "Costo Total";
+
+                // Datos
+                int row = 2;
+                foreach (var item in reporte)
+                {
+                    worksheet.Cells[row, 1].Value = item.NombreProducto;
+                    worksheet.Cells[row, 2].Value = item.CodigoProducto;
+                    worksheet.Cells[row, 3].Value = item.CodigoInsumo;
+                    worksheet.Cells[row, 4].Value = item.CostoInsumo;
+                    worksheet.Cells[row, 5].Value = item.Cantidad;
+                    worksheet.Cells[row, 6].Value = item.CostoTotal;
+                    row++;
+                }
+
+                worksheet.Cells.AutoFitColumns();
+
+                return package.GetAsByteArray();
+            }
+        }
     }
 }

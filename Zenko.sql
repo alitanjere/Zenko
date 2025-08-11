@@ -148,6 +148,29 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE dbo.ObtenerReporteFinal
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        p.Nombre AS NombreProducto,
+        p.CodigoProducto,
+        i.CodigoInsumo,
+        i.Costo AS CostoInsumo,
+        pi.Cantidad,
+        (i.Costo * pi.Cantidad) AS CostoTotal
+    FROM
+        Productos p
+    JOIN
+        ProductoInsumo pi ON p.IdProducto = pi.IdProducto
+    JOIN
+        Insumos i ON pi.CodigoInsumo = i.CodigoInsumo
+    ORDER BY
+        p.Nombre, i.CodigoInsumo;
+END;
+GO
+
 CREATE PROCEDURE dbo.UpsertProductoInsumo
     @CodigoProducto NVARCHAR(20),
     @CodigoInsumo NVARCHAR(20),
