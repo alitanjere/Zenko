@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using System;
 using Zenko.Services; // Agregar para que reconozca tus servicios
 
 var builder = WebApplication.CreateBuilder(args);
