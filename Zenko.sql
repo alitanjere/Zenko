@@ -63,13 +63,8 @@ BEGIN
 
     IF (@Prefijo = 'VK' OR @Prefijo = 'VM' OR @Prefijo = 'IK' OR @Prefijo = 'IM')
         SET @Tipo = 'Tela';
-    ELSE IF (@Prefijo = 'VA' OR @Prefijo = 'IA')
+    ELSE -- Si no es Tela, se asume que es Avio. Incluye 'VA', 'IA', y cualquier otro prefijo.
         SET @Tipo = 'Avio';
-    ELSE
-    BEGIN
-        RAISERROR('Prefijo no valido para tipo de insumo.', 16, 1);
-        RETURN;
-    END
 
     SELECT @IdTipoInsumo = IdTipoInsumo FROM Tipos_Insumo WHERE CodigoPrefijo = @Prefijo;
 
