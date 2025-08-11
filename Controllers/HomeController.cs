@@ -87,15 +87,8 @@ public class HomeController : Controller
         using var command = new SqlCommand("dbo.ObtenerOInsertarTipoInsumoPorCodigo", connection);
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@CodigoInsumo", codigoInsumo);
-        try
-        {
-            var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
-        }
-        catch (SqlException ex) when (ex.Message.Contains("Prefijo no valido"))
-        {
-            throw new Exception($"El código de insumo '{codigoInsumo}' tiene un formato no válido y no se puede procesar.");
-        }
+        var result = await command.ExecuteScalarAsync();
+        return Convert.ToInt32(result);
     }
 
     // Método auxiliar para llamar al SP InsertarInsumo
@@ -119,102 +112,72 @@ public class HomeController : Controller
             return View();
         }
 
-        List<ProductoInsumoExcel> relaciones = new List<ProductoInsumoExcel>();
-
+        List<ProductoInsumoExcel> fichaTecnica;
         try
         {
-            relaciones = _excelService.LeerProductoInsumos(archivosExcel);
-
-            if (!relaciones.Any())
+            fichaTecnica = _excelService.LeerProductoInsumos(archivosExcel);
+            if (!fichaTecnica.Any())
             {
-                ModelState.AddModelError("", "El archivo no contiene filas de datos válidas o no se pudieron procesar las relaciones.");
+                ModelState.AddModelError("", "El archivo no contiene filas de datos válidas o las columnas requeridas no se encontraron.");
                 return View();
             }
+
+            var productosAgrupados = fichaTecnica.GroupBy(f => f.VarianteCodigo);
 
             using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 await connection.OpenAsync();
 
-                var codigosInsumoUnicos = relaciones.Select(r => r.CodigoInsumo).Distinct().ToList();
-                var dt = new DataTable();
-                dt.Columns.Add("CodigoInsumo", typeof(string));
-                foreach (var codigo in codigosInsumoUnicos)
+                foreach (var grupoProducto in productosAgrupados)
                 {
-                    dt.Rows.Add(codigo);
-                }
+                    var primerItem = grupoProducto.First();
 
-                var insumosACrear = new List<string>();
-                using (var command = new SqlCommand("dbo.FiltrarInsumosNoExistentes", connection))
-                {
-                    command.CommandType = CommandType.StoredProcedure;
-                    var tvpParam = command.Parameters.AddWithValue("@CodigosInsumo", dt);
-                    tvpParam.SqlDbType = SqlDbType.Structured;
-                    tvpParam.TypeName = "dbo.CodigoInsumoList";
+                    // 1. Upsert del producto
+                    await UpsertProducto(connection, primerItem);
 
-                    using (var reader = await command.ExecuteReaderAsync())
+                    // 2. Preparar y reemplazar la receta (lista de insumos)
+                    var insumosParaTvp = new DataTable();
+                    insumosParaTvp.Columns.Add("CodigoInsumo", typeof(string));
+                    insumosParaTvp.Columns.Add("Cantidad", typeof(decimal));
+
+                    foreach (var item in grupoProducto)
                     {
-                        while (await reader.ReadAsync())
-                        {
-                            insumosACrear.Add(reader.GetString(0));
-                        }
+                        insumosParaTvp.Rows.Add(item.InsumoCodigo, item.Cantidad);
                     }
-                }
 
-                foreach (var codigoInsumo in insumosACrear)
-                {
-                    int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, codigoInsumo);
-                    await InsertarInsumo(connection, new Insumo
-                    {
-                        CodigoInsumo = codigoInsumo,
-                        IdTipoInsumo = idTipoInsumo,
-                        Costo = 0,
-                        FechaRegistro = DateTime.Now
-                    });
-                }
-
-                var productosUnicos = relaciones
-                    .GroupBy(r => r.CodigoProducto)
-                    .Select(g => g.First())
-                    .ToList();
-
-                foreach (var producto in productosUnicos)
-                {
-                    await UpsertProducto(connection, new ProductoExcel { CodigoProducto = producto.CodigoProducto, NombreProducto = producto.NombreProducto });
-                }
-
-                foreach (var relacion in relaciones)
-                {
-                    await UpsertProductoInsumo(connection, relacion);
+                    await ReemplazarInsumos(connection, primerItem.VarianteCodigo, insumosParaTvp);
                 }
             }
 
-            ViewData["RelacionesProcesadas"] = relaciones;
-            return View();
+            ViewData["MensajeExito"] = $"Se han procesado exitosamente {productosAgrupados.Count()} productos y {fichaTecnica.Count} relaciones de insumos.";
         }
         catch (Exception ex)
         {
             ModelState.AddModelError("", $"Error al procesar el archivo: {ex.Message}");
-            return View();
         }
+
+        return View();
     }
 
-    private async Task<int> UpsertProducto(SqlConnection connection, ProductoExcel producto)
+    private async Task UpsertProducto(SqlConnection connection, ProductoInsumoExcel producto)
     {
         using var command = new SqlCommand("dbo.UpsertProducto", connection);
         command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@CodigoProducto", producto.CodigoProducto);
-        command.Parameters.AddWithValue("@NombreProducto", producto.NombreProducto);
-        var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt32(result);
+        command.Parameters.AddWithValue("@VarianteCodigo", producto.VarianteCodigo);
+        command.Parameters.AddWithValue("@VarianteNombre", producto.VarianteNombre);
+        command.Parameters.AddWithValue("@ModeloCodigo", producto.ModeloCodigo);
+        command.Parameters.AddWithValue("@ModeloNombre", producto.ModeloNombre);
+        await command.ExecuteNonQueryAsync();
     }
 
-    private async Task UpsertProductoInsumo(SqlConnection connection, ProductoInsumoExcel relacion)
+    private async Task ReemplazarInsumos(SqlConnection connection, string varianteCodigo, DataTable insumos)
     {
-        using var command = new SqlCommand("dbo.UpsertProductoInsumo", connection);
+        using var command = new SqlCommand("dbo.ReemplazarInsumosPorProducto", connection);
         command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@CodigoProducto", relacion.CodigoProducto);
-        command.Parameters.AddWithValue("@CodigoInsumo", relacion.CodigoInsumo);
-        command.Parameters.AddWithValue("@Cantidad", relacion.Cantidad);
+        command.Parameters.AddWithValue("@VarianteCodigo", varianteCodigo);
+        var tvpParam = command.Parameters.AddWithValue("@Insumos", insumos);
+        tvpParam.SqlDbType = SqlDbType.Structured;
+        tvpParam.TypeName = "dbo.InsumoConCantidadList";
         await command.ExecuteNonQueryAsync();
     }
 

@@ -2,7 +2,7 @@
 @using System.Linq
 @{
     ViewData["Title"] = "Reporte Final de Costos";
-    var productosAgrupados = Model.GroupBy(r => new { r.CodigoProducto, r.NombreProducto });
+    var productosAgrupados = Model.GroupBy(r => new { r.VarianteCodigo, r.VarianteNombre, r.ModeloCodigo, r.ModeloNombre });
     decimal granTotal = 0;
 }
 
@@ -14,17 +14,21 @@
 
 @if (!Model.Any())
 {
-    <p>No hay datos para mostrar. Por favor, suba los archivos de insumos y productos primero.</p>
+    <p>No hay datos para mostrar. Por favor, suba un archivo de Ficha Técnica primero.</p>
 }
 else
 {
     foreach (var grupo in productosAgrupados)
     {
-        <h3>@grupo.Key.NombreProducto (@grupo.Key.CodigoProducto)</h3>
-        <table class="table table-bordered table-striped">
-            <thead>
+        var producto = grupo.Key;
+        <h4>@producto.VarianteNombre (@producto.VarianteCodigo)</h4>
+        <p class="mb-2"><strong>Modelo:</strong> @producto.ModeloNombre (@producto.ModeloCodigo)</p>
+
+        <table class="table table-bordered table-striped table-sm">
+            <thead class="thead-light">
                 <tr>
                     <th>Código Insumo</th>
+                    <th>Descripción Insumo</th>
                     <th>Costo Unitario</th>
                     <th>Cantidad</th>
                     <th>Costo Total Insumo</th>
@@ -35,6 +39,7 @@ else
                 {
                     <tr>
                         <td>@item.CodigoInsumo</td>
+                        <td>@item.InsumoDescripcion</td>
                         <td>@item.CostoInsumo.ToString("C")</td>
                         <td>@item.Cantidad</td>
                         <td>@item.CostoTotal.ToString("C")</td>
@@ -43,12 +48,12 @@ else
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" class="text-right"><strong>Subtotal Producto:</strong></td>
+                    <td colspan="4" class="text-right"><strong>Subtotal Producto:</strong></td>
                     @{
                         decimal subtotal = grupo.Sum(i => i.CostoTotal);
                         granTotal += subtotal;
                     }
-                    <td><strong>@subtotal.ToString("C")</strong></td>
+                    <td class="font-weight-bold"><strong>@subtotal.ToString("C")</strong></td>
                 </tr>
             </tfoot>
         </table>
