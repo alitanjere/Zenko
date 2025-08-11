@@ -166,18 +166,37 @@ namespace Zenko.Services
                 var worksheet = package.Workbook.Worksheets.FirstOrDefault();
                 if (worksheet == null) continue;
 
-                for (int row = 2; ; row++)
+                // Leer encabezados y encontrar los índices de las columnas
+                var headers = worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column]
+                    .Select(cell => cell.Value?.ToString().Trim().ToUpper() ?? "")
+                    .ToList();
+
+                int colCodigoProducto = headers.IndexOf("MODELO") + 1;
+                int colNombreProducto = headers.IndexOf("MODELO_NOMBRE") + 1;
+                int colCodigoInsumo = headers.IndexOf("INSUMO_TIPO_COD") + 1;
+                int colCantidad = headers.IndexOf("CANTIDAD") + 1;
+
+                // Si no se encuentran todas las columnas necesarias, no se puede procesar el archivo.
+                if (colCodigoProducto == 0 || colNombreProducto == 0 || colCodigoInsumo == 0 || colCantidad == 0)
                 {
-                    var codigoProducto = worksheet.Cells[row, 1].Value?.ToString();
-                    var nombreProducto = worksheet.Cells[row, 2].Value?.ToString();
-                    var codigoInsumo = worksheet.Cells[row, 3].Value?.ToString();
-                    var cantidadStr = worksheet.Cells[row, 4].Value?.ToString();
+                    // Opcional: registrar un error o notificar al usuario.
+                    // Por ahora, simplemente continuamos con el siguiente archivo.
+                    continue;
+                }
+
+                for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+                {
+                    var codigoProducto = worksheet.Cells[row, colCodigoProducto].Value?.ToString();
+                    var nombreProducto = worksheet.Cells[row, colNombreProducto].Value?.ToString();
+                    var codigoInsumo = worksheet.Cells[row, colCodigoInsumo].Value?.ToString();
+                    var cantidadStr = worksheet.Cells[row, colCantidad].Value?.ToString();
 
                     if (string.IsNullOrWhiteSpace(codigoProducto) ||
                         string.IsNullOrWhiteSpace(nombreProducto) ||
                         string.IsNullOrWhiteSpace(codigoInsumo) ||
                         string.IsNullOrWhiteSpace(cantidadStr))
                     {
+                        // Se asume que una fila vacía indica el final de los datos.
                         break;
                     }
 
