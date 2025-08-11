@@ -8,26 +8,23 @@ using System.Linq;
 
 public static class BD
 {
-    private static string connectionString = "Server=localhost;Database=Zenko;Trusted_Connection=True;TrustServerCertificate=True;";
-
-  public static void InsertarInsumo(Insumo insumo)
-{
-    using (var db = new SqlConnection(connectionString))
+    public static void InsertarInsumo(string connectionString, Insumo insumo)
     {
-        var parametros = new
+        using (var db = new SqlConnection(connectionString))
         {
-            CodigoInsumo = insumo.CodigoInsumo,
-            IdTipoInsumo = insumo.IdTipoInsumo,
-            Costo = insumo.Costo,
-            FechaRegistro = insumo.FechaRegistro
-        };
+            var parametros = new
+            {
+                CodigoInsumo = insumo.CodigoInsumo,
+                IdTipoInsumo = insumo.IdTipoInsumo,
+                Costo = insumo.Costo,
+                FechaRegistro = insumo.FechaRegistro
+            };
 
-        db.Execute("InsertarInsumo", parametros, commandType: System.Data.CommandType.StoredProcedure);
+            db.Execute("InsertarInsumo", parametros, commandType: System.Data.CommandType.StoredProcedure);
+        }
     }
-}
 
-
-    public static int ObtenerIdTipoPorNombre(string nombre)
+    public static int ObtenerIdTipoPorNombre(string connectionString, string nombre)
     {
         using (var db = new SqlConnection(connectionString))
         {
@@ -36,21 +33,24 @@ public static class BD
         }
     }
 
-    public static void InicializarTiposInsumo()
+    public static void InicializarTiposInsumo(string connectionString)
     {
-        using (var db = new SqlConnection(connectionString))
+        // Verificar e insertar "Tela"
+        int idTela = ObtenerIdTipoPorNombre(connectionString, "Tela");
+        if (idTela == 0) // No existe
         {
-            // Verificar e insertar "Tela"
-            int idTela = ObtenerIdTipoPorNombre("Tela");
-            if (idTela == 0) // No existe
+            using (var db = new SqlConnection(connectionString))
             {
                 string sqlTela = "INSERT INTO Tipos_Insumo (IdTipoInsumo, Nombre, CodigoPrefijo) VALUES (@IdTipoInsumo, @Nombre, @CodigoPrefijo)";
                 db.Execute(sqlTela, new { IdTipoInsumo = 1, Nombre = "Tela", CodigoPrefijo = "TLA" });
             }
+        }
 
-            // Verificar e insertar "Avio"
-            int idAvio = ObtenerIdTipoPorNombre("Avio");
-            if (idAvio == 0) // No existe
+        // Verificar e insertar "Avio"
+        int idAvio = ObtenerIdTipoPorNombre(connectionString, "Avio");
+        if (idAvio == 0) // No existe
+        {
+            using (var db = new SqlConnection(connectionString))
             {
                 string sqlAvio = "INSERT INTO Tipos_Insumo (IdTipoInsumo, Nombre, CodigoPrefijo) VALUES (@IdTipoInsumo, @Nombre, @CodigoPrefijo)";
                 db.Execute(sqlAvio, new { IdTipoInsumo = 2, Nombre = "Avio", CodigoPrefijo = "AVI" });
@@ -58,7 +58,7 @@ public static class BD
         }
     }
 
-    public static int GuardarResultadoCalculo(object resultados)
+    public static int GuardarResultadoCalculo(string connectionString, object resultados)
     {
         var json = JsonConvert.SerializeObject(resultados);
 
@@ -74,7 +74,7 @@ public static class BD
         }
     }
 
-    public static T ObtenerResultadoPorId<T>(int id)
+    public static T ObtenerResultadoPorId<T>(string connectionString, int id)
     {
         using (var conexion = new SqlConnection(connectionString))
         {
@@ -92,7 +92,7 @@ public static class BD
         }
     }
 
-    public static List<TipoInsumo> ObtenerTiposInsumo()
+    public static List<TipoInsumo> ObtenerTiposInsumo(string connectionString)
     {
         using (var conexion = new SqlConnection(connectionString))
         {
