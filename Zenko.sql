@@ -148,6 +148,24 @@ BEGIN
 END;
 GO
 
+CREATE TYPE dbo.CodigoInsumoList AS TABLE (
+    CodigoInsumo NVARCHAR(20) PRIMARY KEY
+);
+GO
+
+CREATE PROCEDURE dbo.FiltrarInsumosNoExistentes
+    @CodigosInsumo dbo.CodigoInsumoList READONLY
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT ci.CodigoInsumo
+    FROM @CodigosInsumo ci
+    LEFT JOIN Insumos i ON ci.CodigoInsumo = i.CodigoInsumo
+    WHERE i.CodigoInsumo IS NULL;
+END;
+GO
+
 CREATE PROCEDURE dbo.ObtenerReporteFinal
 AS
 BEGIN
