@@ -15,7 +15,12 @@ builder.Services.AddScoped<CalculoService>();
 var app = builder.Build();
 
 // Inicializar tipos de insumo base en la BD
-BD.InicializarTiposInsumo();
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("La cadena de conexión 'DefaultConnection' no se encontró en la configuración.");
+}
+BD.InicializarTiposInsumo(connectionString);
 
 // Middleware básico
 if (!app.Environment.IsDevelopment())
