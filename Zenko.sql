@@ -92,7 +92,7 @@ GO
 CREATE PROCEDURE dbo.InsertarInsumo
     @CodigoInsumo NVARCHAR(20),
     @IdTipoInsumo INT,
-    @Descripcion NVARCHAR(255),
+    @Descripcion NVARCHAR(255) = NULL,
     @Costo DECIMAL(10, 2),
     @FechaRegistro DATETIME
 AS
