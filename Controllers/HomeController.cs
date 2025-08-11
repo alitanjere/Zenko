@@ -87,8 +87,15 @@ public class HomeController : Controller
         using var command = new SqlCommand("dbo.ObtenerOInsertarTipoInsumoPorCodigo", connection);
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@CodigoInsumo", codigoInsumo);
-        var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt32(result);
+        try
+        {
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result);
+        }
+        catch (SqlException ex) when (ex.Message.Contains("Prefijo no valido"))
+        {
+            throw new Exception($"El código de insumo '{codigoInsumo}' tiene un formato no válido y no se puede procesar.");
+        }
     }
 
     // Método auxiliar para llamar al SP InsertarInsumo
