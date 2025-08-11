@@ -28,37 +28,10 @@
     </div>
 </div>
 
-@if (ViewData["RelacionesProcesadas"] != null)
+@if (ViewData["MensajeExito"] != null)
 {
-    var relaciones = (List<Zenko.Models.ProductoInsumoExcel>)ViewData["RelacionesProcesadas"];
-    <div class="card">
-        <div class="card-header">
-            Relaciones Procesadas
-        </div>
-        <div class="card-body">
-            <h4>@relaciones.Count() relaciones de producto-insumo procesadas</h4>
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Código de Producto</th>
-                        <th>Nombre de Producto</th>
-                        <th>Código de Insumo</th>
-                        <th>Cantidad</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var relacion in relaciones)
-                    {
-                        <tr>
-                            <td>@relacion.CodigoProducto</td>
-                            <td>@relacion.NombreProducto</td>
-                            <td>@relacion.CodigoInsumo</td>
-                            <td>@relacion.Cantidad</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+    <div class="alert alert-success mt-4" role="alert">
+        @ViewData["MensajeExito"]
     </div>
 }
 

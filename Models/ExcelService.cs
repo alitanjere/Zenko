@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Globalization;
-using System;
 using Zenko.Models;
 using Microsoft.AspNetCore.Http;
 
@@ -173,9 +172,12 @@ namespace Zenko.Services
 
                 var requiredHeaders = new Dictionary<string, string>
                 {
-                    { "CodigoProducto", "MODELO" },
-                    { "NombreProducto", "MODELO_NOMBRE" },
-                    { "CodigoInsumo", "INSUMO_TIPO_COD" },
+                    { "VarianteCodigo", "VARIANTE_CODIGO" },
+                    { "VarianteNombre", "VARIANTE" },
+                    { "ModeloCodigo", "MODELO" },
+                    { "ModeloNombre", "MODELO_NOMBRE" },
+                    { "InsumoCodigo", "INSUMO" },
+                    { "InsumoDescripcion", "INSUMO_DESC" },
                     { "Cantidad", "CANTIDAD" }
                 };
 
@@ -192,34 +194,25 @@ namespace Zenko.Services
 
                 for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
                 {
-                    var codigoProducto = worksheet.Cells[row, colIndices["CodigoProducto"]].Value?.ToString();
-                    var nombreProducto = worksheet.Cells[row, colIndices["NombreProducto"]].Value?.ToString();
-                    var codigoInsumo = worksheet.Cells[row, colIndices["CodigoInsumo"]].Value?.ToString();
-                    var cantidadStr = worksheet.Cells[row, colIndices["Cantidad"]].Value?.ToString();
+                    var varianteCodigo = worksheet.Cells[row, colIndices["VarianteCodigo"]].Value?.ToString();
+                    var insumoCodigo = worksheet.Cells[row, colIndices["InsumoCodigo"]].Value?.ToString();
 
-                    if (string.IsNullOrWhiteSpace(codigoProducto) && string.IsNullOrWhiteSpace(nombreProducto) &&
-                        string.IsNullOrWhiteSpace(codigoInsumo) && string.IsNullOrWhiteSpace(cantidadStr))
+                    if (string.IsNullOrWhiteSpace(varianteCodigo) || string.IsNullOrWhiteSpace(insumoCodigo))
                     {
-                        continue; // Saltar filas completamente vacías
-                    }
-
-                    if (string.IsNullOrWhiteSpace(codigoProducto) ||
-                        string.IsNullOrWhiteSpace(nombreProducto) ||
-                        string.IsNullOrWhiteSpace(codigoInsumo) ||
-                        string.IsNullOrWhiteSpace(cantidadStr))
-                    {
-                        // Podríamos lanzar una excepción por datos incompletos, pero por ahora saltamos la fila.
                         continue;
                     }
 
-                    decimal cantidad = ParsearDecimalDesdeString(cantidadStr);
+                    decimal cantidad = ParsearDecimalDesdeString(worksheet.Cells[row, colIndices["Cantidad"]].Value?.ToString());
                     if (cantidad < 0) continue;
 
                     relaciones.Add(new ProductoInsumoExcel
                     {
-                        CodigoProducto = codigoProducto.Trim(),
-                        NombreProducto = nombreProducto.Trim(),
-                        CodigoInsumo = codigoInsumo.Trim(),
+                        VarianteCodigo = varianteCodigo.Trim(),
+                        VarianteNombre = worksheet.Cells[row, colIndices["VarianteNombre"]].Value?.ToString().Trim(),
+                        ModeloCodigo = worksheet.Cells[row, colIndices["ModeloCodigo"]].Value?.ToString().Trim(),
+                        ModeloNombre = worksheet.Cells[row, colIndices["ModeloNombre"]].Value?.ToString().Trim(),
+                        InsumoCodigo = insumoCodigo.Trim(),
+                        InsumoDescripcion = worksheet.Cells[row, colIndices["InsumoDescripcion"]].Value?.ToString().Trim(),
                         Cantidad = cantidad
                     });
                 }
@@ -231,30 +224,36 @@ namespace Zenko.Services
         {
             using (var package = new ExcelPackage())
             {
-                var worksheet = package.Workbook.Worksheets.Add("Reporte Final");
+                var worksheet = package.Workbook.Worksheets.Add("Reporte Final de Costos");
 
                 // Encabezados
-                worksheet.Cells[1, 1].Value = "Producto";
-                worksheet.Cells[1, 2].Value = "Código Producto";
-                worksheet.Cells[1, 3].Value = "Código Insumo";
-                worksheet.Cells[1, 4].Value = "Costo Insumo";
-                worksheet.Cells[1, 5].Value = "Cantidad";
-                worksheet.Cells[1, 6].Value = "Costo Total";
+                worksheet.Cells[1, 1].Value = "Código Variante";
+                worksheet.Cells[1, 2].Value = "Nombre Variante";
+                worksheet.Cells[1, 3].Value = "Código Modelo";
+                worksheet.Cells[1, 4].Value = "Nombre Modelo";
+                worksheet.Cells[1, 5].Value = "Código Insumo";
+                worksheet.Cells[1, 6].Value = "Descripción Insumo";
+                worksheet.Cells[1, 7].Value = "Costo Insumo";
+                worksheet.Cells[1, 8].Value = "Cantidad";
+                worksheet.Cells[1, 9].Value = "Costo Total";
 
                 // Datos
                 int row = 2;
                 foreach (var item in reporte)
                 {
-                    worksheet.Cells[row, 1].Value = item.NombreProducto;
-                    worksheet.Cells[row, 2].Value = item.CodigoProducto;
-                    worksheet.Cells[row, 3].Value = item.CodigoInsumo;
-                    worksheet.Cells[row, 4].Value = item.CostoInsumo;
-                    worksheet.Cells[row, 5].Value = item.Cantidad;
-                    worksheet.Cells[row, 6].Value = item.CostoTotal;
+                    worksheet.Cells[row, 1].Value = item.VarianteCodigo;
+                    worksheet.Cells[row, 2].Value = item.VarianteNombre;
+                    worksheet.Cells[row, 3].Value = item.ModeloCodigo;
+                    worksheet.Cells[row, 4].Value = item.ModeloNombre;
+                    worksheet.Cells[row, 5].Value = item.CodigoInsumo;
+                    worksheet.Cells[row, 6].Value = item.InsumoDescripcion;
+                    worksheet.Cells[row, 7].Value = item.CostoInsumo;
+                    worksheet.Cells[row, 8].Value = item.Cantidad;
+                    worksheet.Cells[row, 9].Value = item.CostoTotal;
                     row++;
                 }
 
-                worksheet.Cells.AutoFitColumns();
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
 
                 return package.GetAsByteArray();
             }
