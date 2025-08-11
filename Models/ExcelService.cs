@@ -166,38 +166,49 @@ namespace Zenko.Services
                 var worksheet = package.Workbook.Worksheets.FirstOrDefault();
                 if (worksheet == null) continue;
 
-                // Leer encabezados y encontrar los índices de las columnas
                 var headers = worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column]
                     .Select(cell => cell.Value?.ToString().Trim().ToUpper() ?? "")
                     .ToList();
 
-                int colCodigoProducto = headers.IndexOf("MODELO") + 1;
-                int colNombreProducto = headers.IndexOf("MODELO_NOMBRE") + 1;
-                int colCodigoInsumo = headers.IndexOf("INSUMO_TIPO_COD") + 1;
-                int colCantidad = headers.IndexOf("CANTIDAD") + 1;
-
-                // Si no se encuentran todas las columnas necesarias, no se puede procesar el archivo.
-                if (colCodigoProducto == 0 || colNombreProducto == 0 || colCodigoInsumo == 0 || colCantidad == 0)
+                var requiredHeaders = new Dictionary<string, string>
                 {
-                    // Opcional: registrar un error o notificar al usuario.
-                    // Por ahora, simplemente continuamos con el siguiente archivo.
-                    continue;
+                    { "CodigoProducto", "MODELO" },
+                    { "NombreProducto", "MODELO_NOMBRE" },
+                    { "CodigoInsumo", "INSUMO_TIPO_COD" },
+                    { "Cantidad", "CANTIDAD" }
+                };
+
+                var colIndices = new Dictionary<string, int>();
+                foreach (var header in requiredHeaders)
+                {
+                    int index = headers.IndexOf(header.Value);
+                    if (index == -1)
+                    {
+                        throw new Exception($"No se pudo encontrar la columna requerida '{header.Value}' en el archivo Excel.");
+                    }
+                    colIndices[header.Key] = index + 1;
                 }
 
                 for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
                 {
-                    var codigoProducto = worksheet.Cells[row, colCodigoProducto].Value?.ToString();
-                    var nombreProducto = worksheet.Cells[row, colNombreProducto].Value?.ToString();
-                    var codigoInsumo = worksheet.Cells[row, colCodigoInsumo].Value?.ToString();
-                    var cantidadStr = worksheet.Cells[row, colCantidad].Value?.ToString();
+                    var codigoProducto = worksheet.Cells[row, colIndices["CodigoProducto"]].Value?.ToString();
+                    var nombreProducto = worksheet.Cells[row, colIndices["NombreProducto"]].Value?.ToString();
+                    var codigoInsumo = worksheet.Cells[row, colIndices["CodigoInsumo"]].Value?.ToString();
+                    var cantidadStr = worksheet.Cells[row, colIndices["Cantidad"]].Value?.ToString();
+
+                    if (string.IsNullOrWhiteSpace(codigoProducto) && string.IsNullOrWhiteSpace(nombreProducto) &&
+                        string.IsNullOrWhiteSpace(codigoInsumo) && string.IsNullOrWhiteSpace(cantidadStr))
+                    {
+                        continue; // Saltar filas completamente vacías
+                    }
 
                     if (string.IsNullOrWhiteSpace(codigoProducto) ||
                         string.IsNullOrWhiteSpace(nombreProducto) ||
                         string.IsNullOrWhiteSpace(codigoInsumo) ||
                         string.IsNullOrWhiteSpace(cantidadStr))
                     {
-                        // Se asume que una fila vacía indica el final de los datos.
-                        break;
+                        // Podríamos lanzar una excepción por datos incompletos, pero por ahora saltamos la fila.
+                        continue;
                     }
 
                     decimal cantidad = ParsearDecimalDesdeString(cantidadStr);

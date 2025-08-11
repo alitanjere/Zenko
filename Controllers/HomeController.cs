@@ -112,7 +112,22 @@ public class HomeController : Controller
             return View();
         }
 
-        var relaciones = _excelService.LeerProductoInsumos(archivosExcel);
+        List<ProductoInsumoExcel> relaciones;
+        try
+        {
+            relaciones = _excelService.LeerProductoInsumos(archivosExcel);
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", $"Error al leer el archivo Excel: {ex.Message}");
+            return View();
+        }
+
+        if (!relaciones.Any())
+        {
+            ModelState.AddModelError("", "El archivo no contiene filas de datos válidas o no se pudieron procesar las relaciones.");
+            return View();
+        }
 
         using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
         await connection.OpenAsync();

@@ -7,6 +7,7 @@
         Cargar Archivos de Productos
     </div>
     <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
         <form asp-action="SubirProductos" method="post" enctype="multipart/form-data">
             <div class="file-upload-wrapper">
                 <div class="file-upload-icon">
