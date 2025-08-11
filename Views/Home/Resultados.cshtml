@@ -1,104 +1,61 @@
-@model Zenko.Models.ResultadoViewModel
-@using System.Linq;
-
+@model List<Zenko.Models.ReporteFinalViewModel>
+@using System.Linq
 @{
-    ViewData["Title"] = "Resultados del Cálculo de Costos";
+    ViewData["Title"] = "Reporte Final de Costos";
+    var productosAgrupados = Model.GroupBy(r => new { r.CodigoProducto, r.NombreProducto });
+    decimal granTotal = 0;
 }
 
-<h2>@ViewData["Title"]</h2>
+<h1>@ViewData["Title"]</h1>
 
-@if (!string.IsNullOrEmpty(Model.MensajeError))
+<div class="text-right mb-3">
+    <a asp-action="DescargarResultados" class="btn btn-success">Descargar como Excel</a>
+</div>
+
+@if (!Model.Any())
 {
-    <div class="alert alert-warning" role="alert">
-        @Model.MensajeError
+    <p>No hay datos para mostrar. Por favor, suba los archivos de insumos y productos primero.</p>
+}
+else
+{
+    foreach (var grupo in productosAgrupados)
+    {
+        <h3>@grupo.Key.NombreProducto (@grupo.Key.CodigoProducto)</h3>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Código Insumo</th>
+                    <th>Costo Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Costo Total Insumo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in grupo)
+                {
+                    <tr>
+                        <td>@item.CodigoInsumo</td>
+                        <td>@item.CostoInsumo.ToString("C")</td>
+                        <td>@item.Cantidad</td>
+                        <td>@item.CostoTotal.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-right"><strong>Subtotal Producto:</strong></td>
+                    @{
+                        decimal subtotal = grupo.Sum(i => i.CostoTotal);
+                        granTotal += subtotal;
+                    }
+                    <td><strong>@subtotal.ToString("C")</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+
+    <hr />
+    <div class="text-right">
+        <h3>Gran Total: @granTotal.ToString("C")</h3>
     </div>
 }
-
-@if (Model.TelasDetalle.Any() || Model.AviosDetalle.Any())
-{
-    <h2>Resumen de Costos</h2>
-    <table class="table">
-        <tr>
-            <th>Costo Total de Telas:</th>
-            <td>@Model.CostoTotalTelas.ToString("C")</td>
-        </tr>
-        <tr>
-            <th>Costo Total de Avíos:</th>
-            <td>@Model.CostoTotalAvios.ToString("C")</td>
-        </tr>
-        <tr>
-            <th>Costo Total General:</th>
-            <td><strong>@Model.CostoTotalGeneral.ToString("C")</strong></td>
-        </tr>
-    </table>
-
-    @if (Model.TelasDetalle.Any())
-    {
-        <h3>Detalle de Telas</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Descripción</th>
-                    <th>Proveedor</th>
-                    <th class="text-end">Costo por Metro</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var tela in Model.TelasDetalle)
-                {
-                    <tr>
-                        <td>@tela.Codigo</td>
-                        <td>@tela.Descripcion</td>
-                        <td>@tela.Proveedor</td>
-                        <td class="text-end">@tela.CostoPorMetro.ToString("C")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else if (string.IsNullOrEmpty(Model.MensajeError))
-    {
-        <p>No se procesaron datos de telas.</p>
-    }
-
-    @if (Model.AviosDetalle.Any())
-    {
-        <h3>Detalle de Avíos</h3>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Descripción</th>
-                    <th>Proveedor</th>
-                    <th>Unidad Medida</th>
-                    <th class="text-end">Costo por Unidad</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var avio in Model.AviosDetalle)
-                {
-                    <tr>
-                        <td>@avio.Codigo</td>
-                        <td>@avio.Descripcion</td>
-                        <td>@avio.Proveedor</td>
-                        <td>@avio.UnidadMedida</td>
-                        <td class="text-end">@avio.CostoUnidad.ToString("C")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else if (string.IsNullOrEmpty(Model.MensajeError))
-    {
-        <p>No se procesaron datos de avíos.</p>
-    }
-}
-else if (string.IsNullOrEmpty(Model.MensajeError)) // Si no hay detalles y no hay un error general
-{
-    <p>No hay datos de costos para mostrar. Por favor, cargue los archivos Excel.</p>
-}
-
-<p>
-    <a asp-action="Index" class="btn btn-primary">Volver a Cargar Archivos</a>
-</p>
