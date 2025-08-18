@@ -112,11 +112,16 @@ public class HomeController : Controller
             return View();
         }
 
-        List<ProductoInsumoExcel> fichaTecnica;
+        var productosExitosos = 0;
+        var relacionesExitosas = 0;
+        var variantesExitosas = new HashSet<string>();
+        var variantesFallidas = new HashSet<string>();
+
         try
         {
-            fichaTecnica = _excelService.LeerProductoInsumos(archivosExcel);
-            if (!fichaTecnica.Any())
+            var (fichaTecnica, todasLasVariantes) = _excelService.LeerProductoInsumos(archivosExcel);
+
+            if (!fichaTecnica.Any() && !todasLasVariantes.Any())
             {
                 ModelState.AddModelError("", "El archivo no contiene filas de datos válidas o las columnas requeridas no se encontraron.");
                 return View();
@@ -131,25 +136,52 @@ public class HomeController : Controller
                 foreach (var grupoProducto in productosAgrupados)
                 {
                     var primerItem = grupoProducto.First();
-
-                    // 1. Upsert del producto
-                    await UpsertProducto(connection, primerItem);
-
-                    // 2. Preparar y reemplazar la receta (lista de insumos)
-                    var insumosParaTvp = new DataTable();
-                    insumosParaTvp.Columns.Add("CodigoInsumo", typeof(string));
-                    insumosParaTvp.Columns.Add("Cantidad", typeof(decimal));
-
-                    foreach (var item in grupoProducto)
+                    var varianteCodigo = primerItem.VarianteCodigo;
+                    try
                     {
-                        insumosParaTvp.Rows.Add(item.InsumoCodigo, item.Cantidad);
-                    }
+                        // 1. Upsert del producto
+                        await UpsertProducto(connection, primerItem);
 
-                    await ReemplazarInsumos(connection, primerItem.VarianteCodigo, insumosParaTvp);
+                        // 2. Preparar y reemplazar la receta (lista de insumos)
+                        var insumosParaTvp = new DataTable();
+                        insumosParaTvp.Columns.Add("CodigoInsumo", typeof(string));
+                        insumosParaTvp.Columns.Add("Cantidad", typeof(decimal));
+
+                        foreach (var item in grupoProducto)
+                        {
+                            insumosParaTvp.Rows.Add(item.InsumoCodigo, item.Cantidad);
+                        }
+
+                        await ReemplazarInsumos(connection, varianteCodigo, insumosParaTvp);
+
+                        productosExitosos++;
+                        relacionesExitosas += grupoProducto.Count();
+                        variantesExitosas.Add(varianteCodigo);
+                    }
+                    catch (Exception)
+                    {
+                        var modeloCodigo = primerItem.ModeloCodigo;
+                        ModelState.AddModelError("", $"el producto {modeloCodigo}, en {varianteCodigo} variante falló.");
+                        variantesFallidas.Add(varianteCodigo);
+                    }
                 }
             }
 
-            ViewData["MensajeExito"] = $"Se han procesado exitosamente {productosAgrupados.Count()} productos y {fichaTecnica.Count} relaciones de insumos.";
+            // Check for variants that were in the file but had no valid insumos and were not processed.
+            foreach (var entry in todasLasVariantes)
+            {
+                var varianteCodigo = entry.Key;
+                if (!variantesExitosas.Contains(varianteCodigo) && !variantesFallidas.Contains(varianteCodigo))
+                {
+                    var modeloCodigo = entry.Value;
+                    ModelState.AddModelError("", $"el producto {modeloCodigo}, en {varianteCodigo} variante falló.");
+                }
+            }
+
+            if (productosExitosos > 0)
+            {
+                ViewData["MensajeExito"] = $"Se han procesado exitosamente {productosExitosos} de {todasLasVariantes.Count} productos y {relacionesExitosas} relaciones de insumos.";
+            }
         }
         catch (Exception ex)
         {

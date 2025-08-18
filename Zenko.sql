@@ -185,7 +185,7 @@ BEGIN
     FROM
         Productos p
     JOIN
-        ProductoInsumo pi ON p.VarianteCodigo = pi.VarianteCodigo
+        ProductoInsumo pi ON p.IdProducto = pi.IdProducto
     JOIN
         Insumos i ON pi.CodigoInsumo = i.CodigoInsumo
     ORDER BY

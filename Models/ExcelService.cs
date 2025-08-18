@@ -153,9 +153,10 @@ namespace Zenko.Services
             return tipo == 'A';
         }
 
-        public List<ProductoInsumoExcel> LeerProductoInsumos(List<IFormFile> archivosExcel)
+        public (List<ProductoInsumoExcel> relaciones, Dictionary<string, string> todasLasVariantes) LeerProductoInsumos(List<IFormFile> archivosExcel)
         {
             var relaciones = new List<ProductoInsumoExcel>();
+            var todasLasVariantes = new Dictionary<string, string>();
 
             foreach (var archivo in archivosExcel)
             {
@@ -195,7 +196,17 @@ namespace Zenko.Services
 
                 for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
                 {
-                    var varianteCodigo = worksheet.Cells[row, colIndices["VarianteCodigo"]].Value?.ToString();
+                    var varianteCodigo = worksheet.Cells[row, colIndices["VarianteCodigo"]].Value?.ToString()?.Trim();
+                    var modeloCodigo = worksheet.Cells[row, colIndices["ModeloCodigo"]].Value?.ToString()?.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(varianteCodigo) && !string.IsNullOrWhiteSpace(modeloCodigo))
+                    {
+                        if (!todasLasVariantes.ContainsKey(varianteCodigo))
+                        {
+                            todasLasVariantes.Add(varianteCodigo, modeloCodigo);
+                        }
+                    }
+
                     var insumoCodigo = worksheet.Cells[row, colIndices["InsumoCodigo"]].Value?.ToString();
 
                     if (string.IsNullOrWhiteSpace(varianteCodigo) || string.IsNullOrWhiteSpace(insumoCodigo))
@@ -208,9 +219,9 @@ namespace Zenko.Services
 
                     relaciones.Add(new ProductoInsumoExcel
                     {
-                        VarianteCodigo = varianteCodigo.Trim(),
+                        VarianteCodigo = varianteCodigo,
                         VarianteNombre = worksheet.Cells[row, colIndices["VarianteNombre"]].Value?.ToString().Trim(),
-                        ModeloCodigo = worksheet.Cells[row, colIndices["ModeloCodigo"]].Value?.ToString().Trim(),
+                        ModeloCodigo = modeloCodigo,
                         ModeloNombre = worksheet.Cells[row, colIndices["ModeloNombre"]].Value?.ToString().Trim(),
                         InsumoCodigo = insumoCodigo.Trim(),
                         InsumoDescripcion = worksheet.Cells[row, colIndices["InsumoDescripcion"]].Value?.ToString().Trim(),
@@ -218,7 +229,7 @@ namespace Zenko.Services
                     });
                 }
             }
-            return relaciones;
+            return (relaciones, todasLasVariantes);
         }
 
         public byte[] CrearExcelReporteFinal(List<ReporteFinalViewModel> reporte)
