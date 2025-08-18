@@ -158,7 +158,7 @@ public class HomeController : Controller
                         relacionesExitosas += grupoProducto.Count();
                         variantesExitosas.Add(varianteCodigo);
                     }
-                    catch (Exception)
+                    catch (SqlException)
                     {
                         var modeloCodigo = primerItem.ModeloCodigo;
                         ModelState.AddModelError("", $"el producto {modeloCodigo}, en {varianteCodigo} variante falló.");
