@@ -57,6 +57,7 @@ public class HomeController : Controller
         {
             CodigoInsumo = tela.Codigo,
             IdTipoInsumo = idTipoInsumo,
+            Descripcion = tela.Descripcion,
             Costo = tela.CostoPorMetro,
             FechaRegistro = DateTime.Now
         });
@@ -70,6 +71,7 @@ public class HomeController : Controller
         {
             CodigoInsumo = avio.Codigo,
             IdTipoInsumo = idTipoInsumo,
+            Descripcion = avio.Descripcion,
             Costo = avio.CostoUnidad,
             FechaRegistro = DateTime.Now
         });
@@ -98,6 +100,7 @@ public class HomeController : Controller
         command.CommandType = CommandType.StoredProcedure;
         command.Parameters.AddWithValue("@CodigoInsumo", insumo.CodigoInsumo);
         command.Parameters.AddWithValue("@IdTipoInsumo", insumo.IdTipoInsumo);
+        command.Parameters.AddWithValue("@Descripcion", insumo.Descripcion ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@Costo", insumo.Costo);
         command.Parameters.AddWithValue("@FechaRegistro", insumo.FechaRegistro);
         await command.ExecuteNonQueryAsync();

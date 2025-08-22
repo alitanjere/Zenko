@@ -82,6 +82,7 @@ namespace Zenko.Services
             if (string.IsNullOrWhiteSpace(codigo)) break;
 
             var costoStr = worksheet.Cells[row, 2].Value?.ToString();
+            var descripcion = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
             decimal costo = ParsearDecimalDesdeString(costoStr);
 
             if (costo < 0) continue;
@@ -91,7 +92,8 @@ namespace Zenko.Services
                 telas.Add(new TelaExcel
                 {
                     Codigo = codigo,
-                    CostoPorMetro = costo
+                    CostoPorMetro = costo,
+                    Descripcion = descripcion
                 });
             }
             else if (EsCodigoAvio(codigo))
@@ -99,7 +101,8 @@ namespace Zenko.Services
                 avios.Add(new AvioExcel
                 {
                     Codigo = codigo,
-                    CostoUnidad = costo
+                    CostoUnidad = costo,
+                    Descripcion = descripcion
                 });
             }
             // Si no es ninguno, simplemente se ignora esa fila
