@@ -33,6 +33,19 @@ main {
     color: #2C3E50 !important;
 }
 
+.nav-link {
+    margin: 0 0.5rem;
+    color: #5A8DDE;
+    text-decoration: none;
+    transition: color 0.3s ease, background-color 0.3s ease, text-decoration 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #3e6ab3;
+    background-color: rgba(90, 141, 222, 0.1);
+    text-decoration: underline;
+}
+
 .main-container {
     width: 100%;
     max-width: 960px;
