@@ -66,8 +66,9 @@ public static class BD
         {
             conexion.Open();
             var comando = new SqlCommand(
-                "INSERT INTO Resultados_Calculos (DatosJson) OUTPUT INSERTED.IdResultado VALUES (@datos)", conexion);
+                "INSERT INTO Resultados_Calculos (DatosJson, FechaCarga) OUTPUT INSERTED.IdResultado VALUES (@datos, @fecha)", conexion);
             comando.Parameters.AddWithValue("@datos", json);
+            comando.Parameters.AddWithValue("@fecha", DateTime.Now);
 
             int id = (int)comando.ExecuteScalar();
             return id;
