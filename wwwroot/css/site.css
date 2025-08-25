@@ -1,27 +1,28 @@
 /* Card Style */
 .card {
-    background-color: #FFFFFF;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: 16px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
     margin-bottom: 2rem;
     transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    transform: translateY(-4px);
 }
 
 .card-header {
-    background-color: #F8F9FA;
+    background-color: transparent;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--color-card-border);
     font-size: 1.25rem;
     font-weight: 500;
     color: #2C3E50;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
 }
 
 .card-body {
