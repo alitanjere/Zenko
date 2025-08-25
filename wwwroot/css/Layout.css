@@ -108,6 +108,19 @@ a:hover {
     outline: none;
     box-shadow: 0 0 0 3px rgba(90, 141, 222, 0.3) !important;
 }
+.producto-titulo {
+    font-weight: bold;
+    color: #0056b3;
+    border-bottom: 2px solid #0056b3;
+    padding-bottom: 5px;
+    margin-top: 20px;
+}
+
+.variante-titulo {
+    font-weight: bold;
+    color: #333;
+    margin-top: 15px;
+}
 /* Skeleton Loading Styles */
 .skeleton {
     position: relative;
