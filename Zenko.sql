@@ -61,14 +61,22 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[Tipos_Insumo](
-	[IdTipoInsumo] [int] NOT NULL,
-	[Nombre] [nvarchar](50) NOT NULL,
-	[CodigoPrefijo] [varchar](5) NOT NULL,
-PRIMARY KEY CLUSTERED 
+        [IdTipoInsumo] [int] NOT NULL,
+        [Nombre] [nvarchar](50) NOT NULL,
+        [CodigoPrefijo] [varchar](5) NOT NULL,
+PRIMARY KEY CLUSTERED
 (
-	[IdTipoInsumo] ASC
+        [IdTipoInsumo] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
+GO
+CREATE TABLE [dbo].[Auditorias](
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [Archivo] NVARCHAR(255) NOT NULL,
+        [UsuarioId] INT NOT NULL,
+        [Fecha] DATETIME NOT NULL,
+        [ResumenCambios] NVARCHAR(500) NOT NULL
+)
 GO
 ALTER TABLE [dbo].[Insumos]  WITH CHECK ADD FOREIGN KEY([IdTipoInsumo])
 REFERENCES [dbo].[Tipos_Insumo] ([IdTipoInsumo])

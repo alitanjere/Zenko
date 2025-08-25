@@ -1,0 +1,40 @@
+@model IEnumerable<Zenko.Models.Auditoria>
+@{
+    ViewData["Title"] = "Auditoría";
+}
+
+<h2>Auditoría</h2>
+
+<form method="get" class="row mb-3">
+    <div class="col">
+        <input type="number" name="usuarioId" value="@Context.Request.Query["usuarioId"]" class="form-control" placeholder="UsuarioId" />
+    </div>
+    <div class="col">
+        <input type="date" name="fecha" value="@Context.Request.Query["fecha"]" class="form-control" />
+    </div>
+    <div class="col">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Archivo</th>
+            <th>Usuario</th>
+            <th>Fecha</th>
+            <th>Resumen</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Archivo</td>
+            <td>@item.UsuarioId</td>
+            <td>@item.Fecha.ToString("g")</td>
+            <td>@item.ResumenCambios</td>
+        </tr>
+    }
+    </tbody>
+</table>

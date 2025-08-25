@@ -6,6 +6,10 @@ using System.Globalization;
 using System;
 using Zenko.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Data.SqlClient;
+using Dapper;
+using System.Data;
+using System.Threading.Tasks;
 
 namespace Zenko.Services
 {
@@ -230,6 +234,100 @@ namespace Zenko.Services
                 }
             }
             return (relaciones, todasLasVariantes);
+        }
+
+        public async Task<(List<TelaExcel> telas, List<AvioExcel> avios)> ProcesarArchivos(List<IFormFile> archivosExcel, string connectionString, int usuarioId)
+        {
+            var (telas, avios) = LeerArchivos(archivosExcel);
+
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var existentes = (await connection.QueryAsync<Insumo>("SELECT CodigoInsumo, Costo FROM Insumos"))
+                .ToDictionary(i => i.CodigoInsumo, i => i.Costo);
+
+            int altas = 0;
+            int modificaciones = 0;
+            var procesados = new HashSet<string>();
+
+            foreach (var tela in telas)
+            {
+                procesados.Add(tela.Codigo);
+                int idTipo = await ObtenerOInsertarTipoInsumo(connection, tela.Codigo);
+                if (existentes.TryGetValue(tela.Codigo, out decimal costoPrevio))
+                {
+                    if (costoPrevio != tela.CostoPorMetro) modificaciones++;
+                    existentes.Remove(tela.Codigo);
+                }
+                else
+                {
+                    altas++;
+                }
+                await InsertarInsumo(connection, new Insumo
+                {
+                    CodigoInsumo = tela.Codigo,
+                    IdTipoInsumo = idTipo,
+                    Costo = tela.CostoPorMetro,
+                    FechaRegistro = DateTime.Now
+                });
+            }
+
+            foreach (var avio in avios)
+            {
+                procesados.Add(avio.Codigo);
+                int idTipo = await ObtenerOInsertarTipoInsumo(connection, avio.Codigo);
+                if (existentes.TryGetValue(avio.Codigo, out decimal costoPrevio))
+                {
+                    if (costoPrevio != avio.CostoUnidad) modificaciones++;
+                    existentes.Remove(avio.Codigo);
+                }
+                else
+                {
+                    altas++;
+                }
+                await InsertarInsumo(connection, new Insumo
+                {
+                    CodigoInsumo = avio.Codigo,
+                    IdTipoInsumo = idTipo,
+                    Costo = avio.CostoUnidad,
+                    FechaRegistro = DateTime.Now
+                });
+            }
+
+            int bajas = existentes.Count;
+            if (bajas > 0)
+            {
+                var codigosBaja = existentes.Keys.ToList();
+                await connection.ExecuteAsync("DELETE FROM Insumos WHERE CodigoInsumo IN @Codigos", new { Codigos = codigosBaja });
+            }
+
+            string archivos = string.Join(", ", archivosExcel.Select(a => a.FileName));
+            string resumen = $"Altas: {altas}, Bajas: {bajas}, Modificaciones: {modificaciones}";
+            await connection.ExecuteAsync(
+                "INSERT INTO Auditorias (Archivo, UsuarioId, Fecha, ResumenCambios) VALUES (@Archivo, @UsuarioId, @Fecha, @Resumen)",
+                new { Archivo = archivos, UsuarioId = usuarioId, Fecha = DateTime.Now, Resumen = resumen });
+
+            return (telas, avios);
+        }
+
+        private async Task<int> ObtenerOInsertarTipoInsumo(SqlConnection connection, string codigoInsumo)
+        {
+            using var command = new SqlCommand("dbo.ObtenerOInsertarTipoInsumoPorCodigo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@CodigoInsumo", codigoInsumo);
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result);
+        }
+
+        private async Task InsertarInsumo(SqlConnection connection, Insumo insumo)
+        {
+            using var command = new SqlCommand("dbo.InsertarInsumo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@CodigoInsumo", insumo.CodigoInsumo);
+            command.Parameters.AddWithValue("@IdTipoInsumo", insumo.IdTipoInsumo);
+            command.Parameters.AddWithValue("@Costo", insumo.Costo);
+            command.Parameters.AddWithValue("@FechaRegistro", insumo.FechaRegistro);
+            await command.ExecuteNonQueryAsync();
         }
 
         public byte[] CrearExcelReporteFinal(List<ReporteFinalViewModel> reporte)
