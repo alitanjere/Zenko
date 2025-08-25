@@ -14,9 +14,12 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm px-4">
+        <nav class="navbar navbar-expand-sm navbar-light px-4">
             <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Resultados">Zenko</a>
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between" id="navbarNav">
                 <ul class="navbar-nav flex-grow-1">
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Subir Insumos</a>

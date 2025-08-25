@@ -16,10 +16,15 @@ main {
     flex: 1;
 }
 
-.navbar {
+.navbar,
+.navbar-collapse {
     background: linear-gradient(to right, #94B9FF, #CDFFD8);
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     padding: 0.8rem 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    color: #2C3E50 !important;
 }
 
 .navbar-brand {
