@@ -4,15 +4,19 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using System;
 using Zenko.Services; // Agregar para que reconozca tus servicios
+using Zenko.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Registramos MVC
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 // Registramos los servicios para inyección de dependencias
 builder.Services.AddScoped<ExcelService>();
 builder.Services.AddScoped<CalculoService>();
+builder.Services.AddSingleton<FileProcessingQueue>();
+builder.Services.AddHostedService<FileProcessingService>();
 
 var app = builder.Build();
 
@@ -39,5 +43,6 @@ app.UseRouting();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<ProcessingHub>("/processingHub");
 
 app.Run();
