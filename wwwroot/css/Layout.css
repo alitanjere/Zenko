@@ -143,3 +143,16 @@ a:hover {
     100% { background-position: 0% 50%; }
 }
 
+.producto-titulo {
+    font-weight: bold;
+    color: #0056b3;
+    border-bottom: 2px solid #0056b3;
+    padding-bottom: 5px;
+    margin-top: 20px;
+}
+
+.variante-titulo {
+    font-weight: bold;
+    color: #333;
+    margin-top: 15px;
+}
