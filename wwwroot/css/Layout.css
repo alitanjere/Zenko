@@ -108,3 +108,38 @@ a:hover {
     outline: none;
     box-shadow: 0 0 0 3px rgba(90, 141, 222, 0.3) !important;
 }
+
+/* Parallax background section */
+.parallax {
+    position: relative;
+    background: linear-gradient(-45deg, #4a78c8, #94B9FF, #CDFFD8, #4a78c8);
+    background-size: 400% 400%;
+    animation: gradientShift 20s ease infinite;
+    background-attachment: fixed;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    padding: 2rem 0;
+}
+
+.parallax::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 0;
+}
+
+.parallax > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
