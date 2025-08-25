@@ -86,23 +86,26 @@ a:hover {
 }
 
 /* Button Styles */
+
 .btn-primary,
 .btn-secondary {
-    border: none;
     color: #fff;
     font-weight: 500;
     padding: 12px 30px;
     border-radius: 8px;
+    border: 1px solid transparent;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .btn-primary {
     background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
 }
 
 .btn-secondary {
     background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
 }
 
 .btn-primary:hover,
