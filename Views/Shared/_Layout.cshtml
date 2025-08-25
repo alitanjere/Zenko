@@ -6,7 +6,7 @@
     <title>@ViewData["Title"] - Zenko</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/Layout.css" asp-append-version="true" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
@@ -15,7 +15,10 @@
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-light px-4">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Resultados">Zenko</a>
+            <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Resultados">
+                <img src="~/img/Zenko.png" alt="Logo Zenko" class="logo me-2" />
+                <span class="brand-name">Zenko</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -31,9 +34,6 @@
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Resultados">Reporte Final</a>
                     </li>
                 </ul>
-            </div>
-            <div>
-                <img src="~/img/Zenko.png" alt="Logo Zenko" style="height: 50px;" />
             </div>
         </nav>
     </header>
