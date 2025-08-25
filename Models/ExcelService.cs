@@ -6,11 +6,13 @@ using System.Globalization;
 using System;
 using Zenko.Models;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace Zenko.Services
 {
     public class ExcelService
     {
+        private readonly CalculoService _calculoService = new CalculoService();
         static ExcelService()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -38,20 +40,32 @@ namespace Zenko.Services
                     decimal costo = ParsearDecimalDesdeString(costoStr);
                     if (costo < 0) continue;
 
+                    var unidad = worksheet.Cells[row, 3].Value?.ToString();
+
                     if (EsCodigoTela(codigo))
                     {
+                        var baseUnidad = CalculoService.UnidadBaseTela;
+                        var factor = _calculoService.ConvertirUnidad(1m, unidad, baseUnidad);
+                        var costoConvertido = factor > 0 ? costo / factor : costo;
+
                         telas.Add(new TelaExcel
                         {
                             Codigo = codigo,
-                            CostoPorMetro = costo
+                            CostoPorMetro = costoConvertido,
+                            UnidadMedida = baseUnidad
                         });
                     }
                     else if (EsCodigoAvio(codigo))
                     {
+                        var baseUnidad = CalculoService.UnidadBaseAvio;
+                        var factor = _calculoService.ConvertirUnidad(1m, unidad, baseUnidad);
+                        var costoConvertido = factor > 0 ? costo / factor : costo;
+
                         avios.Add(new AvioExcel
                         {
                             Codigo = codigo,
-                            CostoUnidad = costo
+                            CostoUnidad = costoConvertido,
+                            UnidadMedida = baseUnidad
                         });
                     }
                 }
@@ -86,20 +100,32 @@ namespace Zenko.Services
 
             if (costo < 0) continue;
 
+            var unidad = worksheet.Cells[row, 3].Value?.ToString();
+
             if (EsCodigoTela(codigo))
             {
+                var baseUnidad = CalculoService.UnidadBaseTela;
+                var factor = _calculoService.ConvertirUnidad(1m, unidad, baseUnidad);
+                var costoConvertido = factor > 0 ? costo / factor : costo;
+
                 telas.Add(new TelaExcel
                 {
                     Codigo = codigo,
-                    CostoPorMetro = costo
+                    CostoPorMetro = costoConvertido,
+                    UnidadMedida = baseUnidad
                 });
             }
             else if (EsCodigoAvio(codigo))
             {
+                var baseUnidad = CalculoService.UnidadBaseAvio;
+                var factor = _calculoService.ConvertirUnidad(1m, unidad, baseUnidad);
+                var costoConvertido = factor > 0 ? costo / factor : costo;
+
                 avios.Add(new AvioExcel
                 {
                     Codigo = codigo,
-                    CostoUnidad = costo
+                    CostoUnidad = costoConvertido,
+                    UnidadMedida = baseUnidad
                 });
             }
             // Si no es ninguno, simplemente se ignora esa fila
@@ -214,8 +240,20 @@ namespace Zenko.Services
                         continue;
                     }
 
-                    decimal cantidad = ParsearDecimalDesdeString(worksheet.Cells[row, colIndices["Cantidad"]].Value?.ToString());
-                    if (cantidad < 0) continue;
+                    var cantidadStr = worksheet.Cells[row, colIndices["Cantidad"]].Value?.ToString();
+                    if (string.IsNullOrWhiteSpace(cantidadStr))
+                        continue;
+
+                    var match = Regex.Match(cantidadStr.Trim(), @"^(?<valor>[0-9]+[\.,]?[0-9]*)\s*(?<unidad>[A-Za-z]*)$");
+                    if (!match.Success)
+                        continue;
+
+                    decimal valorCantidad = ParsearDecimalDesdeString(match.Groups["valor"].Value);
+                    if (valorCantidad < 0) continue;
+
+                    string unidadCantidad = match.Groups["unidad"].Value;
+                    string unidadBase = EsCodigoTela(insumoCodigo) ? CalculoService.UnidadBaseTela : CalculoService.UnidadBaseAvio;
+                    decimal cantidad = _calculoService.ConvertirUnidad(valorCantidad, unidadCantidad, unidadBase);
 
                     relaciones.Add(new ProductoInsumoExcel
                     {
