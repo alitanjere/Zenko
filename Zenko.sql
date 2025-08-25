@@ -258,3 +258,46 @@ BEGIN
     END
 END;
 GO
+/****** Object:  Table [dbo].[Resultados_Calculos]    Script Date: 18/8/2025 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Resultados_Calculos](
+    [IdResultado] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [VarianteCodigo] [nvarchar](20) NOT NULL,
+    [FechaCalculo] [datetime] NOT NULL,
+    [DatosJson] [nvarchar](max) NOT NULL
+)
+GO
+/****** Object:  StoredProcedure [dbo].[ObtenerVariacionCostos]    Script Date: 18/8/2025 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[ObtenerVariacionCostos]
+    @FechaAnterior DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    WITH Actual AS (
+        SELECT VarianteCodigo,
+               CAST(JSON_VALUE(DatosJson, '$.CostoTotalGeneral') AS DECIMAL(10,2)) AS CostoActual
+        FROM Resultados_Calculos
+        WHERE FechaCalculo = (SELECT MAX(FechaCalculo) FROM Resultados_Calculos)
+    ),
+    Anterior AS (
+        SELECT VarianteCodigo,
+               CAST(JSON_VALUE(DatosJson, '$.CostoTotalGeneral') AS DECIMAL(10,2)) AS CostoPrevio
+        FROM Resultados_Calculos
+        WHERE CAST(FechaCalculo AS DATE) = @FechaAnterior
+    )
+    SELECT a.VarianteCodigo,
+           a.CostoActual,
+           ISNULL(b.CostoPrevio,0) AS CostoPrevio,
+           a.CostoActual - ISNULL(b.CostoPrevio,0) AS Diferencia
+    FROM Actual a
+    LEFT JOIN Anterior b ON a.VarianteCodigo = b.VarianteCodigo;
+END;
+GO

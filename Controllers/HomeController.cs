@@ -236,4 +236,16 @@ public class HomeController : Controller
         byte[] fileContents = _excelService.CrearExcelReporteFinal(model);
         return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReporteFinalCostos.xlsx");
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Variaciones(DateTime? fechaAnterior)
+    {
+        var fecha = fechaAnterior?.Date ?? DateTime.Today;
+        using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        var variaciones = (await connection.QueryAsync<VariacionCosto>(
+            "ObtenerVariacionCostos",
+            new { FechaAnterior = fecha },
+            commandType: CommandType.StoredProcedure)).ToList();
+        return View(variaciones);
+    }
 }

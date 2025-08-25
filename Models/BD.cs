@@ -58,7 +58,7 @@ public static class BD
         }
     }
 
-    public static int GuardarResultadoCalculo(string connectionString, object resultados)
+    public static int GuardarResultadoCalculo(string connectionString, string varianteCodigo, object resultados)
     {
         var json = JsonConvert.SerializeObject(resultados);
 
@@ -66,7 +66,9 @@ public static class BD
         {
             conexion.Open();
             var comando = new SqlCommand(
-                "INSERT INTO Resultados_Calculos (DatosJson) OUTPUT INSERTED.IdResultado VALUES (@datos)", conexion);
+                "INSERT INTO Resultados_Calculos (VarianteCodigo, FechaCalculo, DatosJson) OUTPUT INSERTED.IdResultado VALUES (@variante, @fecha, @datos)", conexion);
+            comando.Parameters.AddWithValue("@variante", varianteCodigo);
+            comando.Parameters.AddWithValue("@fecha", DateTime.Now);
             comando.Parameters.AddWithValue("@datos", json);
 
             int id = (int)comando.ExecuteScalar();

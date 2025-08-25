@@ -1,0 +1,35 @@
+@model IEnumerable<Zenko.Models.VariacionCosto>
+@{
+    ViewData["Title"] = "Variaciones de Costos";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!Model.Any())
+{
+    <p>No hay variaciones para mostrar.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Variante</th>
+                <th>Costo Actual</th>
+                <th>Costo Previo</th>
+                <th>Diferencia</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.VarianteCodigo</td>
+                <td>@item.CostoActual.ToString("C")</td>
+                <td>@item.CostoPrevio.ToString("C")</td>
+                <td>@item.Diferencia.ToString("C")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
