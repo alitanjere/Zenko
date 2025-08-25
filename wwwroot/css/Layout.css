@@ -86,25 +86,32 @@ a:hover {
 }
 
 /* Button Styles */
-.btn-primary {
-    background-color: #5A8DDE;
-    border-color: #5A8DDE;
+.btn-primary,
+.btn-secondary {
+    border: none;
     color: #fff;
     font-weight: 500;
     padding: 12px 30px;
     border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.btn-primary:hover {
-    background-color: #4a78c8;
-    border-color: #4a78c8;
-    color: #fff;
-    transform: scale(1.03);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+.btn-primary {
+    background-color: var(--bs-primary);
+}
+
+.btn-secondary {
+    background-color: var(--bs-secondary);
+}
+
+.btn-primary:hover,
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .btn:focus, .form-control:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(90, 141, 222, 0.3) !important;
+    box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.3) !important;
 }
