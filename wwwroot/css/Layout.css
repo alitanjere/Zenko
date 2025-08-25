@@ -1,15 +1,63 @@
+/* Light and dark mode variables */
+:root {
+  --color-fondo: #F4F6F8;
+  --color-texto: #333;
+  --color-navbar-bg: linear-gradient(to right, #94B9FF, #CDFFD8);
+  --color-nav-link: #2C3E50;
+  --color-brand-highlight: #4a78c8;
+  --color-nav-link-hover-bg: rgba(90, 141, 222, 0.1);
+  --color-link: #5A8DDE;
+  --color-link-hover: #3e6ab3;
+  --color-footer-bg: #FFFFFF;
+  --color-footer-text: #6c757d;
+  --color-btn-bg: #5A8DDE;
+  --color-btn-bg-hover: #4a78c8;
+  --color-border: #e9ecef;
+
+  --color-fondo-dark: #1e1e1e;
+  --color-texto-dark: #f5f5f5;
+  --color-navbar-bg-dark: linear-gradient(to right, #2f2f2f, #3f3f3f);
+  --color-nav-link-dark: #eaeaea;
+  --color-brand-highlight-dark: #a0c4ff;
+  --color-nav-link-hover-bg-dark: rgba(255,255,255,0.1);
+  --color-link-dark: #a0c4ff;
+  --color-link-hover-dark: #d0e0ff;
+  --color-footer-bg-dark: #2c2c2c;
+  --color-footer-text-dark: #aaaaaa;
+  --color-btn-bg-dark: #4a78c8;
+  --color-btn-bg-hover-dark: #3e6ab3;
+  --color-border-dark: #444;
+}
+
+[data-theme="dark"] {
+  --color-fondo: var(--color-fondo-dark);
+  --color-texto: var(--color-texto-dark);
+  --color-navbar-bg: var(--color-navbar-bg-dark);
+  --color-nav-link: var(--color-nav-link-dark);
+  --color-brand-highlight: var(--color-brand-highlight-dark);
+  --color-nav-link-hover-bg: var(--color-nav-link-hover-bg-dark);
+  --color-link: var(--color-link-dark);
+  --color-link-hover: var(--color-link-hover-dark);
+  --color-footer-bg: var(--color-footer-bg-dark);
+  --color-footer-text: var(--color-footer-text-dark);
+  --color-btn-bg: var(--color-btn-bg-dark);
+  --color-btn-bg-hover: var(--color-btn-bg-hover-dark);
+  --color-border: var(--color-border-dark);
+}
+
 html {
   font-size: 16px;
 }
 
 body {
   font-family: 'Montserrat', sans-serif;
-  background-color: #F4F6F8;
-  color: #333;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   margin: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 main {
@@ -18,23 +66,25 @@ main {
 
 .navbar,
 .navbar-collapse {
-    background: linear-gradient(to right, #94B9FF, #CDFFD8);
+    background: var(--color-navbar-bg);
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     padding: 0.8rem 1.5rem;
+    transition: background 0.3s ease, background-color 0.3s ease, color 0.3s ease;
 }
 
 .navbar-nav .nav-link {
-    color: #2C3E50 !important;
+    color: var(--color-nav-link) !important;
 }
 
   .navbar-brand {
       font-size: 2rem;
       font-weight: 700;
-      color: #2C3E50 !important;
+      color: var(--color-nav-link) !important;
+      transition: color 0.3s ease;
   }
 
   .navbar-brand .brand-name {
-      color: #4a78c8;
+      color: var(--color-brand-highlight);
       text-shadow: 0 1px 2px rgba(0,0,0,0.2);
   }
 
@@ -45,14 +95,14 @@ main {
 
 .nav-link {
     margin: 0 0.5rem;
-    color: #5A8DDE;
+    color: var(--color-link);
     text-decoration: none;
     transition: color 0.3s ease, background-color 0.3s ease, text-decoration 0.3s ease;
 }
 
 .nav-link:hover {
-    color: #3e6ab3;
-    background-color: rgba(90, 141, 222, 0.1);
+    color: var(--color-link-hover);
+    background-color: var(--color-nav-link-hover-bg);
     text-decoration: underline;
 }
 
@@ -64,31 +114,32 @@ main {
 }
 
 .footer {
-    background-color: #FFFFFF;
+    background-color: var(--color-footer-bg);
     padding: 1.5rem 0;
     width: 100%;
     text-align: center;
     font-size: 0.9rem;
-    color: #6c757d;
+    color: var(--color-footer-text);
     margin-top: auto;
-    border-top: 1px solid #e9ecef !important;
+    border-top: 1px solid var(--color-border) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* General Link Styles */
 a {
-    color: #5A8DDE;
+    color: var(--color-link);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 a:hover {
-    color: #3e6ab3;
+    color: var(--color-link-hover);
 }
 
 /* Button Styles */
 .btn-primary {
-    background-color: #5A8DDE;
-    border-color: #5A8DDE;
+    background-color: var(--color-btn-bg);
+    border-color: var(--color-btn-bg);
     color: #fff;
     font-weight: 500;
     padding: 12px 30px;
@@ -97,8 +148,8 @@ a:hover {
 }
 
 .btn-primary:hover {
-    background-color: #4a78c8;
-    border-color: #4a78c8;
+    background-color: var(--color-btn-bg-hover);
+    border-color: var(--color-btn-bg-hover);
     color: #fff;
     transform: scale(1.03);
     box-shadow: 0 6px 15px rgba(0,0,0,0.15);

@@ -34,4 +34,25 @@ document.addEventListener('DOMContentLoaded', function () {
             sortButton.textContent = isAscending ? 'Ordenar A-Z' : 'Ordenar Z-A';
         });
     }
+
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        const body = document.body;
+        const storedTheme = localStorage.getItem('theme') || 'light';
+        body.setAttribute('data-theme', storedTheme);
+        updateToggleText(storedTheme);
+
+        themeToggle.addEventListener('click', function () {
+            const currentTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', currentTheme);
+            localStorage.setItem('theme', currentTheme);
+            updateToggleText(currentTheme);
+        });
+    }
+
+    function updateToggleText(theme) {
+        if (themeToggle) {
+            themeToggle.textContent = theme === 'dark' ? 'Modo claro' : 'Modo oscuro';
+        }
+    }
 });
