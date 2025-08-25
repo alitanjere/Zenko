@@ -16,11 +16,13 @@ public class HomeController : Controller
 {
     private readonly ExcelService _excelService;
     private readonly IConfiguration _configuration;
+    private readonly CalculoService _calculoService;
 
-    public HomeController(ExcelService excelService, IConfiguration configuration)
+    public HomeController(ExcelService excelService, IConfiguration configuration, CalculoService calculoService)
     {
         _excelService = excelService;
         _configuration = configuration;
+        _calculoService = calculoService;
     }
 
     [HttpGet]
@@ -45,6 +47,8 @@ public class HomeController : Controller
     }
 
     var (telas, avios) = _excelService.LeerArchivos(archivosExcel);
+    var resultadoCalculo = _calculoService.CalcularCostos(telas, avios);
+    BD.GuardarResultadoCalculo(_configuration.GetConnectionString("DefaultConnection"), resultadoCalculo);
 
     using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
     await connection.OpenAsync();
@@ -235,5 +239,12 @@ public class HomeController : Controller
 
         byte[] fileContents = _excelService.CrearExcelReporteFinal(model);
         return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReporteFinalCostos.xlsx");
+    }
+
+    [HttpGet]
+    public IActionResult HistorialInsumo(int insumoId)
+    {
+        var historial = _calculoService.ObtenerHistorial(insumoId);
+        return View(historial);
     }
 }

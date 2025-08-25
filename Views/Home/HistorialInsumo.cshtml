@@ -1,0 +1,37 @@
+@model List<Zenko.Models.HistorialPrecio>
+@using System.Text.Json
+@using System.Linq
+@{
+    ViewData["Title"] = "Historial de Insumo";
+    var etiquetas = Model.Select(h => h.Fecha.ToString("yyyy-MM-dd"));
+    var valores = Model.Select(h => h.Precio);
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!Model.Any())
+{
+    <p>No hay datos de historial para este insumo.</p>
+}
+else
+{
+    <canvas id="historialChart"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('historialChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(JsonSerializer.Serialize(etiquetas)),
+                datasets: [{
+                    label: 'Precio',
+                    data: @Html.Raw(JsonSerializer.Serialize(valores)),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: false,
+                    tension: 0.1
+                }]
+            }
+        });
+    </script>
+}

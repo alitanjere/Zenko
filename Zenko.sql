@@ -258,3 +258,22 @@ BEGIN
     END
 END;
 GO
+/****** Object:  Table [dbo].[Resultados_Calculos]    Script Date: 2025-05-18 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF OBJECT_ID('dbo.Resultados_Calculos','U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Resultados_Calculos](
+        [IdResultado] [int] IDENTITY(1,1) NOT NULL,
+        [DatosJson] [nvarchar](max) NOT NULL,
+        [FechaCarga] [datetime] NOT NULL DEFAULT(GETDATE()),
+    CONSTRAINT [PK_Resultados_Calculos] PRIMARY KEY CLUSTERED ([IdResultado] ASC)
+    ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+END
+ELSE IF COL_LENGTH('dbo.Resultados_Calculos','FechaCarga') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Resultados_Calculos] ADD [FechaCarga] [datetime] NOT NULL DEFAULT(GETDATE());
+END
+GO
