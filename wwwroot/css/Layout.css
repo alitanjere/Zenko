@@ -108,3 +108,24 @@ a:hover {
     outline: none;
     box-shadow: 0 0 0 3px rgba(90, 141, 222, 0.3) !important;
 }
+
+/* Featured carousel styles */
+.featured-carousel {
+    max-width: 960px;
+    margin: 0 auto 2rem;
+}
+
+.featured-carousel .carousel-item {
+    height: 300px;
+}
+
+.featured-carousel .carousel-item img {
+    object-fit: cover;
+    height: 100%;
+}
+
+@media (max-width: 576px) {
+    .featured-carousel .carousel-item {
+        height: 200px;
+    }
+}

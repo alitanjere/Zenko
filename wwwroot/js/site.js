@@ -34,4 +34,14 @@ document.addEventListener('DOMContentLoaded', function () {
             sortButton.textContent = isAscending ? 'Ordenar A-Z' : 'Ordenar Z-A';
         });
     }
+
+    const slider = document.getElementById('featuredCarousel');
+    if (slider) {
+        new bootstrap.Carousel(slider, {
+            interval: 3000,
+            ride: 'carousel',
+            pause: false,
+            touch: true
+        });
+    }
 });
