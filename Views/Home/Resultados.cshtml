@@ -9,77 +9,84 @@
 
 <h1>@ViewData["Title"]</h1>
 
-<div class="text-right mb-3">
-    <button id="sort-button" class="btn btn-primary">Ordenar A-Z</button>
-    <a asp-action="DescargarResultados" class="btn btn-success" style="margin-left: 10px;">Descargar como Excel</a>
+<div id="resultados-skeleton">
+    <div class="skeleton" style="height:40px; width:30%; margin-bottom:20px;"></div>
+    <div class="skeleton" style="height:200px; width:100%;"></div>
 </div>
 
-@if (!Model.Any())
-{
-    <p>No hay datos para mostrar. Por favor, suba un archivo de Ficha Técnica primero.</p>
-}
-else
-{
-    <div id="productos-container">
-        @foreach (var grupoProducto in productosAgrupados)
-        {
-            var producto = grupoProducto.Key;
-            <div class="producto-card" data-nombre="@producto.ModeloNombre">
-                <h2 style="font-weight: bold; color: #0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 5px; margin-top: 20px;">
-                    @producto.ModeloNombre (@producto.ModeloCodigo)
-                </h2>
+<div id="resultados-contenido" class="hidden">
+    <div class="text-right mb-3">
+        <button id="sort-button" class="btn btn-primary">Ordenar A-Z</button>
+        <a asp-action="DescargarResultados" class="btn btn-success" style="margin-left: 10px;">Descargar como Excel</a>
+    </div>
 
-                @{
-                    var variantesAgrupadas = grupoProducto.GroupBy(v => new { v.VarianteCodigo, v.VarianteNombre });
-                }
+    @if (!Model.Any())
+    {
+        <p>No hay datos para mostrar. Por favor, suba un archivo de Ficha Técnica primero.</p>
+    }
+    else
+    {
+        <div id="productos-container">
+            @foreach (var grupoProducto in productosAgrupados)
+            {
+                var producto = grupoProducto.Key;
+                <div class="producto-card" data-nombre="@producto.ModeloNombre">
+                    <h2 style="font-weight: bold; color: #0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 5px; margin-top: 20px;">
+                        @producto.ModeloNombre (@producto.ModeloCodigo)
+                    </h2>
 
-                @foreach (var grupoVariante in variantesAgrupadas)
-                {
-                    var variante = grupoVariante.Key;
-                    <h4 style="font-weight: bold; color: #333; margin-top: 15px;">
-                        @variante.VarianteNombre (@variante.VarianteCodigo)
-                    </h4>
+                    @{
+                        var variantesAgrupadas = grupoProducto.GroupBy(v => new { v.VarianteCodigo, v.VarianteNombre });
+                    }
 
-                    <table class="table table-bordered table-striped table-sm" style="margin-top: 10px;">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Código Insumo</th>
-                                <th>Descripción Insumo</th>
-                                <th>Costo Unitario</th>
-                                <th>Cantidad</th>
-                                <th>Costo Total Insumo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in grupoVariante)
-                            {
+                    @foreach (var grupoVariante in variantesAgrupadas)
+                    {
+                        var variante = grupoVariante.Key;
+                        <h4 style="font-weight: bold; color: #333; margin-top: 15px;">
+                            @variante.VarianteNombre (@variante.VarianteCodigo)
+                        </h4>
+
+                        <table class="table table-bordered table-striped table-sm" style="margin-top: 10px;">
+                            <thead class="thead-light">
                                 <tr>
-                                    <td>@item.CodigoInsumo</td>
-                                    <td>@item.InsumoDescripcion</td>
-                                    <td>@item.CostoInsumo.ToString("C")</td>
-                                    <td>@item.Cantidad</td>
-                                    <td>@item.CostoTotal.ToString("C")</td>
+                                    <th>Código Insumo</th>
+                                    <th>Descripción Insumo</th>
+                                    <th>Costo Unitario</th>
+                                    <th>Cantidad</th>
+                                    <th>Costo Total Insumo</th>
                                 </tr>
-                            }
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="4" class="text-right"><strong>Subtotal Variante:</strong></td>
-                                @{
-                                    decimal subtotal = grupoVariante.Sum(i => i.CostoTotal);
-                                    granTotal += subtotal;
+                            </thead>
+                            <tbody>
+                                @foreach (var item in grupoVariante)
+                                {
+                                    <tr>
+                                        <td>@item.CodigoInsumo</td>
+                                        <td>@item.InsumoDescripcion</td>
+                                        <td>@item.CostoInsumo.ToString("C")</td>
+                                        <td>@item.Cantidad</td>
+                                        <td>@item.CostoTotal.ToString("C")</td>
+                                    </tr>
                                 }
-                                <td class="font-weight-bold"><strong>@subtotal.ToString("C")</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                }
-            </div>
-        }
-    </div>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-right"><strong>Subtotal Variante:</strong></td>
+                                    @{
+                                        decimal subtotal = grupoVariante.Sum(i => i.CostoTotal);
+                                        granTotal += subtotal;
+                                    }
+                                    <td class="font-weight-bold"><strong>@subtotal.ToString("C")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+                </div>
+            }
+        </div>
 
-    <hr />
-    <div class="text-right">
-        <h3>Gran Total: @granTotal.ToString("C")</h3>
-    </div>
-}
+        <hr />
+        <div class="text-right">
+            <h3>Gran Total: @granTotal.ToString("C")</h3>
+        </div>
+    }
+</div>

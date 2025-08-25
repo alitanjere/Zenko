@@ -1,9 +1,19 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
 
 document.addEventListener('DOMContentLoaded', function () {
+    const skeleton = document.getElementById('resultados-skeleton');
+    const content = document.getElementById('resultados-contenido');
+    if (skeleton && content) {
+        setTimeout(() => {
+            skeleton.classList.add('hidden');
+            content.classList.remove('hidden');
+            content.classList.add('fade-in');
+        }, 500);
+    }
+
     const sortButton = document.getElementById('sort-button');
     if (sortButton) {
         // Initial state from the button text
