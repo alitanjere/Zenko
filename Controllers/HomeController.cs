@@ -16,11 +16,13 @@ public class HomeController : Controller
 {
     private readonly ExcelService _excelService;
     private readonly IConfiguration _configuration;
+    private readonly CalculoService _calculoService;
 
-    public HomeController(ExcelService excelService, IConfiguration configuration)
+    public HomeController(ExcelService excelService, IConfiguration configuration, CalculoService calculoService)
     {
         _excelService = excelService;
         _configuration = configuration;
+        _calculoService = calculoService;
     }
 
     [HttpGet]
@@ -235,5 +237,20 @@ public class HomeController : Controller
 
         byte[] fileContents = _excelService.CrearExcelReporteFinal(model);
         return File(fileContents, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReporteFinalCostos.xlsx");
+    }
+
+    public async Task<IActionResult> ResultadosPorVariante()
+    {
+        using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+
+        var relaciones = (await connection.QueryAsync<ProductoInsumoExcel>(@"SELECT p.VarianteCodigo, p.VarianteNombre, p.ModeloCodigo, p.ModeloNombre, pi.CodigoInsumo, pi.Cantidad FROM Productos p JOIN ProductoInsumo pi ON p.IdProducto = pi.IdProducto")).ToList();
+
+        var costosInsumos = (await connection.QueryAsync<(string CodigoInsumo, decimal Costo)>("SELECT CodigoInsumo, Costo FROM Insumos"))
+            .ToDictionary(x => x.CodigoInsumo, x => x.Costo);
+
+        var resultado = _calculoService.CalcularCostoPorVariante(relaciones, costosInsumos);
+
+        return View(resultado);
     }
 }

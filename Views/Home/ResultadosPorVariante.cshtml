@@ -1,0 +1,31 @@
+@model IDictionary<string, decimal>
+@{
+    ViewData["Title"] = "Costos por Variante";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (!Model.Any())
+{
+    <p>No hay datos para mostrar.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Variante</th>
+                <th>Costo Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Key</td>
+                    <td>@item.Value.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

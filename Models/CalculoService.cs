@@ -24,5 +24,21 @@ namespace Zenko.Services
 
             return resultado;
         }
+
+        public IDictionary<string, decimal> CalcularCostoPorVariante(IEnumerable<ProductoInsumoExcel> relaciones, IDictionary<string, decimal> costosInsumos)
+        {
+            if (relaciones == null || costosInsumos == null)
+            {
+                return new Dictionary<string, decimal>();
+            }
+
+            return relaciones
+                .Where(r => costosInsumos.ContainsKey(r.InsumoCodigo))
+                .GroupBy(r => r.VarianteCodigo)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(r => r.Cantidad * costosInsumos[r.InsumoCodigo])
+                );
+        }
     }
 }
