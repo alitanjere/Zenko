@@ -9,6 +9,7 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Linq;
+using System.IO;
 using Dapper;
 
 
@@ -16,11 +17,13 @@ public class HomeController : Controller
 {
     private readonly ExcelService _excelService;
     private readonly IConfiguration _configuration;
+    private readonly FileProcessingQueue _fileQueue;
 
-    public HomeController(ExcelService excelService, IConfiguration configuration)
+    public HomeController(ExcelService excelService, IConfiguration configuration, FileProcessingQueue fileQueue)
     {
         _excelService = excelService;
         _configuration = configuration;
+        _fileQueue = fileQueue;
     }
 
     [HttpGet]
@@ -37,70 +40,36 @@ public class HomeController : Controller
 
     [HttpPost]
     public async Task<IActionResult> Index(List<IFormFile> archivosExcel)
-{
-    if (archivosExcel == null || archivosExcel.Count == 0)
     {
-        ModelState.AddModelError("", "Por favor, suba al menos un archivo Excel.");
-        return View();
-    }
-
-    var (telas, avios) = _excelService.LeerArchivos(archivosExcel);
-
-    using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-    await connection.OpenAsync();
-
-    // Insertar TELAS (actualizar si existen)
-    foreach (var tela in telas)
-    {
-        int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, tela.Codigo);
-        await InsertarInsumo(connection, new Insumo
+        if (archivosExcel == null || archivosExcel.Count == 0)
         {
-            CodigoInsumo = tela.Codigo,
-            IdTipoInsumo = idTipoInsumo,
-            Costo = tela.CostoPorMetro,
-            FechaRegistro = DateTime.Now
-        });
-    }
+            return BadRequest("No files uploaded");
+        }
 
-    // Insertar AVÍOS (actualizar si existen)
-    foreach (var avio in avios)
-    {
-        int idTipoInsumo = await ObtenerOInsertarTipoInsumo(connection, avio.Codigo);
-        await InsertarInsumo(connection, new Insumo
+        var procesos = new List<object>();
+
+        using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+
+        foreach (var archivo in archivosExcel)
         {
-            CodigoInsumo = avio.Codigo,
-            IdTipoInsumo = idTipoInsumo,
-            Costo = avio.CostoUnidad,
-            FechaRegistro = DateTime.Now
-        });
-    }
+            var id = Guid.NewGuid();
+            byte[] content;
+            using (var ms = new MemoryStream())
+            {
+                await archivo.CopyToAsync(ms);
+                content = ms.ToArray();
+            }
 
-    ViewData["Telas"] = telas;
-    ViewData["Avios"] = avios;
+            await connection.ExecuteAsync("INSERT INTO Procesos (Id, Estado, Porcentaje) VALUES (@Id, @Estado, @Porcentaje)",
+                new { Id = id, Estado = "EnCola", Porcentaje = 0 });
 
-    return View();
-}
+            await _fileQueue.QueueAsync(new QueuedFile { Id = id, FileName = archivo.FileName, Content = content });
 
-    // Método auxiliar para llamar al SP ObtenerOInsertarTipoInsumoPorCodigo
-    private async Task<int> ObtenerOInsertarTipoInsumo(SqlConnection connection, string codigoInsumo)
-    {
-        using var command = new SqlCommand("dbo.ObtenerOInsertarTipoInsumoPorCodigo", connection);
-        command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@CodigoInsumo", codigoInsumo);
-        var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt32(result);
-    }
+            procesos.Add(new { id, name = archivo.FileName });
+        }
 
-    // Método auxiliar para llamar al SP InsertarInsumo
-    private async Task InsertarInsumo(SqlConnection connection, Insumo insumo)
-    {
-        using var command = new SqlCommand("dbo.InsertarInsumo", connection);
-        command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@CodigoInsumo", insumo.CodigoInsumo);
-        command.Parameters.AddWithValue("@IdTipoInsumo", insumo.IdTipoInsumo);
-        command.Parameters.AddWithValue("@Costo", insumo.Costo);
-        command.Parameters.AddWithValue("@FechaRegistro", insumo.FechaRegistro);
-        await command.ExecuteNonQueryAsync();
+        return Json(procesos);
     }
 
     [HttpPost]
