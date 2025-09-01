@@ -115,7 +115,31 @@ namespace Zenko.Services
                 return -1;
 
             string limpio = valor.Replace("$", "").Trim();
-            limpio = limpio.Replace(".", "").Replace(",", ".");
+
+            bool tieneComa = limpio.Contains(',');
+            bool tienePunto = limpio.Contains('.');
+
+            if (tieneComa && tienePunto)
+            {
+                if (limpio.LastIndexOf(',') > limpio.LastIndexOf('.'))
+                {
+                    limpio = limpio.Replace(".", "");
+                    limpio = limpio.Replace(',', '.');
+                }
+                else
+                {
+                    limpio = limpio.Replace(",", "");
+                }
+            }
+            else if (tieneComa)
+            {
+                limpio = limpio.Replace(".", "");
+                limpio = limpio.Replace(',', '.');
+            }
+            else
+            {
+                limpio = limpio.Replace(",", "");
+            }
 
             if (decimal.TryParse(limpio, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal resultado))
                 return resultado;
