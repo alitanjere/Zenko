@@ -111,4 +111,22 @@ public static class BD
             return count > 0;
         }
     }
+
+    public static bool CrearUsuario(string connectionString, string usuario, string password)
+    {
+        using (var conexion = new SqlConnection(connectionString))
+        {
+            conexion.Open();
+            string checkSql = "SELECT COUNT(1) FROM Usuarios WHERE NombreUsuario = @usuario";
+            int count = conexion.QueryFirst<int>(checkSql, new { usuario });
+            if (count > 0)
+            {
+                return false;
+            }
+
+            string insertSql = "INSERT INTO Usuarios (NombreUsuario, Password) VALUES (@usuario, @password)";
+            conexion.Execute(insertSql, new { usuario, password });
+            return true;
+        }
+    }
 }
