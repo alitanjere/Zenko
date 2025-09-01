@@ -268,3 +268,18 @@ BEGIN
     END
 END;
 GO
+
+/****** Object:  Table [dbo].[Usuarios]    Script Date: 18/8/2025 08:39:38 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Usuarios](
+    [IdUsuario] INT IDENTITY(1,1) NOT NULL,
+    [NombreUsuario] NVARCHAR(50) NOT NULL,
+    [Password] NVARCHAR(50) NOT NULL,
+ CONSTRAINT [PK_Usuarios] PRIMARY KEY CLUSTERED ([IdUsuario] ASC)
+) ON [PRIMARY]
+GO
+INSERT INTO [dbo].[Usuarios] (NombreUsuario, Password) VALUES ('admin', 'admin');
+GO
