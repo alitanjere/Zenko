@@ -29,18 +29,31 @@ public class HomeController : Controller
     [HttpGet]
     public IActionResult Index()
     {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
         return View();
     }
 
     [HttpGet]
     public IActionResult SubirProductos()
     {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
         return View();
     }
 
     [HttpPost]
     public async Task<IActionResult> Index(List<IFormFile> archivosExcel)
     {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
         if (archivosExcel == null || archivosExcel.Count == 0)
         {
             return BadRequest("No files uploaded");
@@ -75,6 +88,11 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> SubirProductos(List<IFormFile> archivosExcel)
     {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
         if (archivosExcel == null || archivosExcel.Count == 0)
         {
             ModelState.AddModelError("", "Por favor, suba al menos un archivo Excel de productos.");
@@ -184,6 +202,10 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Resultados()
     {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
         List<ReporteFinalViewModel> model;
         using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
         {
@@ -195,6 +217,10 @@ public class HomeController : Controller
 
     public async Task<IActionResult> DescargarResultados()
     {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
         List<ReporteFinalViewModel> model;
         using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
         {

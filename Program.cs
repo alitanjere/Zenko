@@ -11,6 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Registramos MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
 
 // Registramos los servicios para inyección de dependencias
 builder.Services.AddScoped<ExcelService>();
@@ -38,6 +43,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession();
 
 // Ruta por defecto
 app.MapControllerRoute(

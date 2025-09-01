@@ -100,4 +100,15 @@ public static class BD
             return conexion.Query<TipoInsumo>("SELECT * FROM Tipos_Insumo").ToList();
         }
     }
+
+    public static bool ValidarUsuario(string connectionString, string usuario, string password)
+    {
+        using (var conexion = new SqlConnection(connectionString))
+        {
+            conexion.Open();
+            string sql = "SELECT COUNT(1) FROM Usuarios WHERE NombreUsuario = @usuario AND Password = @password";
+            int count = conexion.QueryFirst<int>(sql, new { usuario, password });
+            return count > 0;
+        }
+    }
 }
