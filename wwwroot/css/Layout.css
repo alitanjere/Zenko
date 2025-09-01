@@ -248,3 +248,32 @@ a:hover {
 [data-theme="dark"] .titulo-blanco{
     color: var(--color-texto-dark)
 }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar-brand {
+    font-size: 1.5rem;
+  }
+
+  .navbar-brand .logo {
+    height: 40px;
+  }
+
+  .main-container {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar-brand {
+    font-size: 1.25rem;
+  }
+
+  .navbar-brand .logo {
+    height: 32px;
+  }
+
+  .main-container {
+    padding: 0.75rem;
+  }
+}

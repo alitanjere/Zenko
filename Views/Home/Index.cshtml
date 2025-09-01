@@ -41,46 +41,50 @@
             {
                 var telas = (List<Zenko.Models.TelaExcel>)ViewData["Telas"];
                 <h4>Telas Encontradas</h4>
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Costo por Metro</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var tela in telas)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
                             <tr>
-                                <td>@tela.Codigo</td>
-                                <td>@tela.CostoPorMetro.ToString("C")</td>
+                                <th>Código</th>
+                                <th>Costo por Metro</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var tela in telas)
+                            {
+                                <tr>
+                                    <td>@tela.Codigo</td>
+                                    <td>@tela.CostoPorMetro.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
 
             @if (ViewData["Avios"] != null)
             {
                 var avios = (List<Zenko.Models.AvioExcel>)ViewData["Avios"];
                 <h4>Avíos Encontrados</h4>
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Costo por Unidad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var avio in avios)
-                        {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
                             <tr>
-                                <td>@avio.Codigo</td>
-                                <td>@avio.CostoUnidad.ToString("C")</td>
+                                <th>Código</th>
+                                <th>Costo por Unidad</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var avio in avios)
+                            {
+                                <tr>
+                                    <td>@avio.Codigo</td>
+                                    <td>@avio.CostoUnidad.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
         </div>
     </div>
