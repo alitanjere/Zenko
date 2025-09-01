@@ -20,6 +20,8 @@ public class AccountController : Controller
     [HttpPost]
     public IActionResult Login(string username, string password)
     {
+        username = username?.Trim();
+        password = password?.Trim();
         var connectionString = _configuration.GetConnectionString("DefaultConnection");
         if (BD.ValidarUsuario(connectionString, username, password))
         {
@@ -39,6 +41,8 @@ public class AccountController : Controller
     [HttpPost]
     public IActionResult Register(string username, string password)
     {
+        username = username?.Trim();
+        password = password?.Trim();
         var connectionString = _configuration.GetConnectionString("DefaultConnection");
         if (BD.RegistrarUsuario(connectionString, username, password))
         {
@@ -53,6 +57,6 @@ public class AccountController : Controller
     public IActionResult Logout()
     {
         HttpContext.Session.Clear();
-        return RedirectToAction("Login");
+        return RedirectToAction("Login", "Account");
     }
 }
