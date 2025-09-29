@@ -1,0 +1,148 @@
+@model Zenko.Models.ConsumoResultadoViewModel
+@{
+    ViewData["Title"] = "Subir Archivos de Consumos";
+}
+
+<div class="card">
+    <div class="card-header">
+        Cargar Archivos de Consumos
+    </div>
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form asp-action="SubirConsumos" method="post" enctype="multipart/form-data">
+            <div class="file-upload-wrapper">
+                <div class="file-upload-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-cloud-upload" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10.5a.5.5 0 0 1 0-1h2.188C13.938 10 15 8.981 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-4.242 3.153A4.98 4.98 0 0 0 1.55 8H1.5a.5.5 0 0 1 0-1h.05a4.98 4.98 0 0 0 1.95-3.846A5.53 5.53 0 0 1 4.406 1.342z"/>
+                        <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                    </svg>
+                </div>
+                <label for="archivosConsumo" class="file-upload-label">
+                    Arrastra tus archivos de consumos aquí o haz clic para seleccionar
+                </label>
+                <input type="file" name="archivosExcel" id="archivosConsumo" multiple accept=".xls,.xlsx" />
+            </div>
+            <div id="consumo-file-name" class="text-center"></div>
+            <div class="btn-container">
+                <button type="submit" class="btn btn-primary">Procesar Consumos</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (ViewData["MensajeExito"] != null)
+{
+    <div class="alert alert-success mt-4" role="alert">
+        @ViewData["MensajeExito"]
+    </div>
+}
+
+@if (Model != null && (Model.ConsumosPorOperacion.Any() || Model.ConsumosPorProducto.Any()))
+{
+    <div class="card mt-4">
+        <div class="card-header">
+            Promedio de Consumos por Operación
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>OP N°</th>
+                            <th>Modelo</th>
+                            <th>Insumo</th>
+                            <th>Costo Operación</th>
+                            <th>Consumo Promedio</th>
+                            <th>Consumo Real</th>
+                            <th>Cantidad Remitida</th>
+                            <th>Devolución</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ConsumosPorOperacion)
+                        {
+                            <tr>
+                                <td>@item.OpNumero</td>
+                                <td>
+                                    <div class="fw-semibold">@item.ModeloCodigo</div>
+                                    <div class="text-muted">@item.ModeloNombre</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@item.InsumoCodigo</div>
+                                    <div class="text-muted">@item.InsumoDescripcion</div>
+                                </td>
+                                <td>@(item.CostoInsumoOperacion.HasValue ? item.CostoInsumoOperacion.Value.ToString("C") : "-")</td>
+                                <td>@(item.ConsumoPromedio.HasValue ? item.ConsumoPromedio.Value.ToString("N3") : "-")</td>
+                                <td>@(item.ConsumoReal.HasValue ? item.ConsumoReal.Value.ToString("N3") : "-")</td>
+                                <td>@item.CantidadRemitidaTotal.ToString("N3")</td>
+                                <td>@item.DevolucionTotal.ToString("N3")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            Promedio de Consumos por Producto
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Modelo</th>
+                            <th>Insumo</th>
+                            <th>Consumo Promedio</th>
+                            <th>Consumo Real</th>
+                            <th>Cantidad Remitida</th>
+                            <th>Devolución</th>
+                            <th>Operaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.ConsumosPorProducto)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">@item.ModeloCodigo</div>
+                                    <div class="text-muted">@item.ModeloNombre</div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold">@item.InsumoCodigo</div>
+                                    <div class="text-muted">@item.InsumoDescripcion</div>
+                                </td>
+                                <td>@(item.ConsumoPromedio.HasValue ? item.ConsumoPromedio.Value.ToString("N3") : "-")</td>
+                                <td>@(item.ConsumoReal.HasValue ? item.ConsumoReal.Value.ToString("N3") : "-")</td>
+                                <td>@item.CantidadRemitidaTotal.ToString("N3")</td>
+                                <td>@item.DevolucionTotal.ToString("N3")</td>
+                                <td>@item.OperacionesDistintas</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('archivosConsumo').addEventListener('change', function (e) {
+            const fileInput = e.target;
+            const display = document.getElementById('consumo-file-name');
+
+            if (fileInput.files && fileInput.files.length > 0) {
+                if (fileInput.files.length === 1) {
+                    display.textContent = 'Archivo seleccionado: ' + fileInput.files[0].name;
+                } else {
+                    display.textContent = fileInput.files.length + ' archivos seleccionados';
+                }
+            } else {
+                display.textContent = '';
+            }
+        });
+    </script>
+}

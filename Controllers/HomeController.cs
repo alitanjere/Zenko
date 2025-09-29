@@ -18,12 +18,14 @@ public class HomeController : Controller
     private readonly ExcelService _excelService;
     private readonly IConfiguration _configuration;
     private readonly FileProcessingQueue _fileQueue;
+    private readonly CalculoService _calculoService;
 
-    public HomeController(ExcelService excelService, IConfiguration configuration, FileProcessingQueue fileQueue)
+    public HomeController(ExcelService excelService, IConfiguration configuration, FileProcessingQueue fileQueue, CalculoService calculoService)
     {
         _excelService = excelService;
         _configuration = configuration;
         _fileQueue = fileQueue;
+        _calculoService = calculoService;
     }
 
     [HttpGet]
@@ -176,6 +178,59 @@ public class HomeController : Controller
         }
 
         return View();
+    }
+
+    [HttpGet]
+    public IActionResult SubirConsumos()
+    {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        return View(new ConsumoResultadoViewModel());
+    }
+
+    [HttpPost]
+    public IActionResult SubirConsumos(List<IFormFile> archivosExcel)
+    {
+        if (HttpContext.Session.GetString("Usuario") == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        if (archivosExcel == null || archivosExcel.Count == 0)
+        {
+            ModelState.AddModelError("", "Por favor, suba al menos un archivo Excel de consumos.");
+            return View(new ConsumoResultadoViewModel());
+        }
+
+        try
+        {
+            var registros = _excelService.LeerConsumos(archivosExcel);
+
+            if (registros == null || registros.Count == 0)
+            {
+                ModelState.AddModelError("", "El archivo no contiene filas de datos válidas o las columnas requeridas no se encontraron.");
+                return View(new ConsumoResultadoViewModel());
+            }
+
+            var resultado = _calculoService.CalcularConsumosPromedio(registros);
+
+            if (resultado.RegistrosProcesados == 0)
+            {
+                ModelState.AddModelError("", "No se pudieron calcular consumos promedio con los datos proporcionados.");
+                return View(resultado);
+            }
+
+            ViewData["MensajeExito"] = $"Se procesaron {resultado.RegistrosProcesados} registros de consumo.";
+            return View(resultado);
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", $"Error al procesar el archivo: {ex.Message}");
+            return View(new ConsumoResultadoViewModel());
+        }
     }
 
     private async Task UpsertProducto(SqlConnection connection, ProductoInsumoExcel producto)

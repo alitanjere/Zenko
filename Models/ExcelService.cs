@@ -62,52 +62,240 @@ namespace Zenko.Services
 
         // Método público que recibe lista de archivos, procesa cada uno y une resultados
         public (List<TelaExcel> telas, List<AvioExcel> avios) LeerArchivos(List<IFormFile> archivosExcel)
-{
-    var telas = new List<TelaExcel>();
-    var avios = new List<AvioExcel>();
-
-    foreach (var archivo in archivosExcel)
-    {
-        using var stream = new MemoryStream();
-        archivo.CopyTo(stream);
-        stream.Position = 0;
-
-        using var package = new ExcelPackage(stream);
-        var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-        if (worksheet == null) continue;
-
-        for (int row = 2; ; row++)
         {
-            var codigo = worksheet.Cells[row, 1].Value?.ToString();
-            if (string.IsNullOrWhiteSpace(codigo)) break;
+            var telas = new List<TelaExcel>();
+            var avios = new List<AvioExcel>();
 
-            var costoStr = worksheet.Cells[row, 2].Value?.ToString();
-            decimal costo = ParsearDecimalDesdeString(costoStr);
-
-            if (costo < 0) continue;
-
-            if (EsCodigoTela(codigo))
+            foreach (var archivo in archivosExcel)
             {
-                telas.Add(new TelaExcel
+                using var stream = new MemoryStream();
+                archivo.CopyTo(stream);
+                stream.Position = 0;
+
+                using var package = new ExcelPackage(stream);
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet == null) continue;
+
+                for (int row = 2; ; row++)
                 {
-                    Codigo = codigo,
-                    CostoPorMetro = costo
-                });
+                    var codigo = worksheet.Cells[row, 1].Value?.ToString();
+                    if (string.IsNullOrWhiteSpace(codigo)) break;
+
+                    var costoStr = worksheet.Cells[row, 2].Value?.ToString();
+                    decimal costo = ParsearDecimalDesdeString(costoStr);
+
+                    if (costo < 0) continue;
+
+                    if (EsCodigoTela(codigo))
+                    {
+                        telas.Add(new TelaExcel
+                        {
+                            Codigo = codigo,
+                            CostoPorMetro = costo
+                        });
+                    }
+                    else if (EsCodigoAvio(codigo))
+                    {
+                        avios.Add(new AvioExcel
+                        {
+                            Codigo = codigo,
+                            CostoUnidad = costo
+                        });
+                    }
+                    // Si no es ninguno, simplemente se ignora esa fila
+                }
             }
-            else if (EsCodigoAvio(codigo))
-            {
-                avios.Add(new AvioExcel
-                {
-                    Codigo = codigo,
-                    CostoUnidad = costo
-                });
-            }
-            // Si no es ninguno, simplemente se ignora esa fila
+
+            return (telas, avios);
         }
-    }
 
-    return (telas, avios);
-}
+        public List<ConsumoExcel> LeerConsumos(List<IFormFile> archivosExcel)
+        {
+            var consumos = new List<ConsumoExcel>();
+
+            if (archivosExcel == null)
+            {
+                return consumos;
+            }
+
+            foreach (var archivo in archivosExcel)
+            {
+                using var stream = new MemoryStream();
+                archivo.CopyTo(stream);
+                stream.Position = 0;
+
+                using var package = new ExcelPackage(stream);
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet?.Dimension == null)
+                {
+                    continue;
+                }
+
+                var headerMap = ObtenerMapaDeEncabezados(worksheet);
+                if (headerMap.Count == 0)
+                {
+                    continue;
+                }
+
+                for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+                {
+                    var opNumero = ObtenerTexto(worksheet, row, headerMap, "OP_NRO");
+                    var modeloCodigo = ObtenerTexto(worksheet, row, headerMap, "MODELO");
+                    var insumoCodigo = ObtenerTexto(worksheet, row, headerMap, "INSUMO");
+
+                    if (string.IsNullOrWhiteSpace(opNumero) && string.IsNullOrWhiteSpace(modeloCodigo) && string.IsNullOrWhiteSpace(insumoCodigo))
+                    {
+                        continue;
+                    }
+
+                    var consumo = new ConsumoExcel
+                    {
+                        Canal = ObtenerTexto(worksheet, row, headerMap, "CANAL"),
+                        OpNumero = opNumero,
+                        ModeloCodigo = modeloCodigo,
+                        ModeloNombre = ObtenerTexto(worksheet, row, headerMap, "MODELO_NOMBRE"),
+                        ColorCodigo = ObtenerTexto(worksheet, row, headerMap, "COLOR_CODIGO"),
+                        ColorNombre = ObtenerTexto(worksheet, row, headerMap, "COLOR"),
+                        InsumoCodigo = insumoCodigo,
+                        InsumoDescripcion = ObtenerTexto(worksheet, row, headerMap, "INSUMO_DESC"),
+                        CostoInsumoOperacion = ParsearDecimalNullable(worksheet, row, headerMap, "COSTO_INSUMO_OP"),
+                        Fecha = ParsearFechaNullable(ObtenerValor(worksheet, row, headerMap, "FECHA")),
+                        Corte = ParsearDecimalNullable(worksheet, row, headerMap, "CORTE"),
+                        ConsumoPromedio = ParsearDecimalNullable(worksheet, row, headerMap, "CONSUMO_PROMEDIO"),
+                        CantidadRemitida = ParsearDecimalNullable(worksheet, row, headerMap, "CANTIDAD_REMITIDA"),
+                        Devolucion = ParsearDecimalNullable(worksheet, row, headerMap, "DEVOLUCION"),
+                        ConsumoRealOperacion = ParsearDecimalNullable(worksheet, row, headerMap, "CONSUMO_REAL_OP")
+                    };
+
+                    if (string.IsNullOrWhiteSpace(consumo.ColorNombre))
+                    {
+                        consumo.ColorNombre = consumo.ColorCodigo;
+                    }
+
+                    consumos.Add(consumo);
+                }
+            }
+
+            return consumos;
+        }
+
+
+        private Dictionary<string, int> ObtenerMapaDeEncabezados(ExcelWorksheet worksheet)
+        {
+            var headers = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            if (worksheet.Dimension == null)
+            {
+                return headers;
+            }
+
+            for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
+            {
+                var header = worksheet.Cells[1, col].Value?.ToString()?.Trim();
+                if (string.IsNullOrWhiteSpace(header))
+                {
+                    continue;
+                }
+
+                var key = header.ToUpperInvariant();
+                if (!headers.ContainsKey(key))
+                {
+                    headers.Add(key, col);
+                }
+            }
+
+            return headers;
+        }
+
+        private object ObtenerValor(ExcelWorksheet worksheet, int row, Dictionary<string, int> headerMap, string headerName)
+        {
+            if (!headerMap.TryGetValue(headerName.ToUpperInvariant(), out int columnIndex))
+            {
+                return null;
+            }
+
+            return worksheet.Cells[row, columnIndex].Value;
+        }
+
+        private string ObtenerTexto(ExcelWorksheet worksheet, int row, Dictionary<string, int> headerMap, string headerName)
+        {
+            if (!headerMap.TryGetValue(headerName.ToUpperInvariant(), out int columnIndex))
+            {
+                return null;
+            }
+
+            var value = worksheet.Cells[row, columnIndex].Value?.ToString()?.Trim();
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+
+        private decimal? ParsearDecimalNullable(ExcelWorksheet worksheet, int row, Dictionary<string, int> headerMap, string headerName)
+        {
+            if (!headerMap.TryGetValue(headerName.ToUpperInvariant(), out int columnIndex))
+            {
+                return null;
+            }
+
+            var rawValue = worksheet.Cells[row, columnIndex].Value;
+            if (rawValue == null)
+            {
+                return null;
+            }
+
+            if (rawValue is double doubleValue)
+            {
+                return (decimal)doubleValue;
+            }
+
+            if (rawValue is decimal decimalValue)
+            {
+                return decimalValue;
+            }
+
+            var parsed = ParsearDecimalDesdeString(rawValue.ToString());
+            if (parsed < 0)
+            {
+                return null;
+            }
+
+            return parsed;
+        }
+
+        private DateTime? ParsearFechaNullable(object valor)
+        {
+            if (valor == null)
+            {
+                return null;
+            }
+
+            if (valor is DateTime fecha)
+            {
+                return fecha;
+            }
+
+            if (valor is double oaDate)
+            {
+                try
+                {
+                    return DateTime.FromOADate(oaDate);
+                }
+                catch
+                {
+                    // Ignorado: se intenta con otros formatos
+                }
+            }
+
+            if (DateTime.TryParse(valor.ToString(), CultureInfo.InvariantCulture, DateTimeStyles.None, out var fechaResult))
+            {
+                return fechaResult;
+            }
+
+            if (DateTime.TryParse(valor.ToString(), out fechaResult))
+            {
+                return fechaResult;
+            }
+
+            return null;
+        }
 
         private decimal ParsearDecimalDesdeString(string valor)
         {
