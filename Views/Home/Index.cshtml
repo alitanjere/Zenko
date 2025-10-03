@@ -95,17 +95,22 @@
     <script>
         const form = document.querySelector('form');
         const progressContainer = document.getElementById('progress-container');
-        const connection = new signalR.HubConnectionBuilder().withUrl('/processingHub').build();
 
-        connection.on('ProgressUpdated', (id, porcentaje, estado) => {
-            const bar = document.getElementById(`bar-${id}`);
-            if (bar) {
-                bar.style.width = porcentaje + '%';
-                bar.textContent = `${estado} ${porcentaje}%`;
-            }
-        });
+        if (window.signalR) {
+            const connection = new signalR.HubConnectionBuilder().withUrl('/processingHub').build();
 
-        connection.start();
+            connection.on('ProgressUpdated', (id, porcentaje, estado) => {
+                const bar = document.getElementById(`bar-${id}`);
+                if (bar) {
+                    bar.style.width = porcentaje + '%';
+                    bar.textContent = `${estado} ${porcentaje}%`;
+                }
+            });
+
+            connection.start().catch(error => console.error('Error al iniciar SignalR:', error));
+        } else {
+            console.warn('SignalR no está disponible. Continuando sin actualizaciones en tiempo real.');
+        }
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
