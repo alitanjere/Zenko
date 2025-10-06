@@ -57,9 +57,9 @@ else
                                 <tr>
                                     <td>@item.CodigoInsumo</td>
                                     <td>@item.InsumoDescripcion</td>
-                                    <td>@item.CostoInsumo.ToString("C")</td>
+                                    <td class="price-value">@item.CostoInsumo.ToString("C")</td>
                                     <td>@item.Cantidad</td>
-                                    <td>@item.CostoTotal.ToString("C")</td>
+                                    <td class="price-value">@item.CostoTotal.ToString("C")</td>
                                 </tr>
                             }
                         </tbody>
@@ -70,7 +70,7 @@ else
                                     decimal subtotal = grupoVariante.Sum(i => i.CostoTotal);
                                     granTotal += subtotal;
                                 }
-                                <td class="font-weight-bold"><strong>@subtotal.ToString("C")</strong></td>
+                                <td class="font-weight-bold price-value"><strong>@subtotal.ToString("C")</strong></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -82,6 +82,6 @@ else
 
     <hr />
     <div class="text-right">
-        <h3>Gran Total: @granTotal.ToString("C")</h3>
+        <h3 class="price-value">Gran Total: @granTotal.ToString("C")</h3>
     </div>
 }

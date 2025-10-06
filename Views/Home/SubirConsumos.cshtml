@@ -71,7 +71,7 @@
                                     <div class="fw-semibold">@item.InsumoCodigo</div>
                                     <div class="text-muted">@item.InsumoDescripcion</div>
                                 </td>
-                                <td>@(item.CostoInsumoOperacion.HasValue ? item.CostoInsumoOperacion.Value.ToString("C") : "-")</td>
+                                <td class="price-value">@(item.CostoInsumoOperacion.HasValue ? item.CostoInsumoOperacion.Value.ToString("C") : "-")</td>
                                 <td>@(item.ConsumoPromedio.HasValue ? item.ConsumoPromedio.Value.ToString("N3") : "-")</td>
                                 <td>@(item.ConsumoReal.HasValue ? item.ConsumoReal.Value.ToString("N3") : "-")</td>
                                 <td>@item.CantidadRemitidaTotal.ToString("N3")</td>
