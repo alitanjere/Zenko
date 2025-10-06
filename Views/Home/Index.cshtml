@@ -1,5 +1,8 @@
+@using System.Text.Json
 @{
     ViewData["Title"] = "Cálculo de Costos de Producción";
+    var procesosIniciales = ViewData["Procesos"] as List<Zenko.Models.QueuedProcessViewModel> ?? new List<Zenko.Models.QueuedProcessViewModel>();
+    var procesosInicialesJson = JsonSerializer.Serialize(procesosIniciales);
 }
 
 <section class="hero">
@@ -107,6 +110,12 @@
         Cargar Archivos de Costos
     </div>
     <div class="card-body">
+        @if (ViewData["MensajeExito"] != null)
+        {
+            <div class="alert alert-success" role="alert">
+                @ViewData["MensajeExito"]
+            </div>
+        }
         <form asp-action="Index" method="post" enctype="multipart/form-data">
             <div class="file-upload-wrapper">
                 <div class="file-upload-icon">
@@ -127,8 +136,24 @@
         </form>
     </div>
 </section>
-
-<div id="progress-container" class="mt-3"></div>
+<input type="hidden" id="initial-processes" value='@Html.Raw(procesosInicialesJson)'>
+<div id="progress-container" class="mt-3">
+    @if (procesosIniciales.Any())
+    {
+        <div class="alert alert-success" role="alert">
+            Estamos procesando tus archivos. En unos instantes verás el progreso actualizado en esta página.
+        </div>
+        foreach (var proceso in procesosIniciales)
+        {
+            <div class="mb-3" data-process-id="@proceso.Id">
+                <div>@proceso.Name</div>
+                <div class="progress">
+                    <div id="bar-@proceso.Id" class="progress-bar" style="width:0%">En cola</div>
+                </div>
+            </div>
+        }
+    }
+</div>
 
 @if (ViewData["Telas"] != null || ViewData["Avios"] != null)
 {
@@ -191,8 +216,59 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
     <script>
-        const form = document.querySelector('form');
+        const form = document.querySelector('#upload-section form');
         const progressContainer = document.getElementById('progress-container');
+        const initialProcessesInput = document.getElementById('initial-processes');
+        const knownProcessIds = new Set();
+
+        function addProcessToContainer(process) {
+            if (!progressContainer || !process || !process.id || knownProcessIds.has(process.id)) {
+                return;
+            }
+
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('mb-3');
+            wrapper.dataset.processId = process.id;
+
+            const nameDiv = document.createElement('div');
+            nameDiv.textContent = process.name;
+            wrapper.appendChild(nameDiv);
+
+            const progress = document.createElement('div');
+            progress.classList.add('progress');
+
+            const bar = document.createElement('div');
+            bar.id = `bar-${process.id}`;
+            bar.classList.add('progress-bar');
+            bar.style.width = '0%';
+            bar.textContent = '0%';
+
+            progress.appendChild(bar);
+            wrapper.appendChild(progress);
+
+            progressContainer.appendChild(wrapper);
+            knownProcessIds.add(process.id);
+        }
+
+        if (progressContainer) {
+            progressContainer.querySelectorAll('[data-process-id]').forEach(element => {
+                const processId = element.getAttribute('data-process-id');
+                if (processId) {
+                    knownProcessIds.add(processId);
+                }
+            });
+        }
+
+        if (initialProcessesInput && initialProcessesInput.value) {
+            try {
+                const initialProcesses = JSON.parse(initialProcessesInput.value);
+                if (Array.isArray(initialProcesses)) {
+                    initialProcesses.forEach(addProcessToContainer);
+                }
+            } catch (error) {
+                console.warn('No se pudieron interpretar los procesos iniciales.', error);
+            }
+        }
 
         if (window.signalR) {
             const connection = new signalR.HubConnectionBuilder().withUrl('/processingHub').build();
@@ -210,20 +286,42 @@
             console.warn('SignalR no está disponible. Continuando sin actualizaciones en tiempo real.');
         }
 
-        form.addEventListener('submit', function (e) {
+        form?.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(form);
             fetch('/Home/Index', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
-                .then(resp => resp.json())
+                .then(resp => {
+                    if (!resp.ok) {
+                        throw new Error('No se pudo iniciar el procesamiento de los archivos.');
+                    }
+                    return resp.json();
+                })
                 .then(data => {
-                    data.forEach(p => {
-                        const wrapper = document.createElement('div');
-                        wrapper.innerHTML = `<div>${p.name}</div><div class="progress"><div id="bar-${p.id}" class="progress-bar" style="width:0%">0%</div></div>`;
-                        progressContainer.appendChild(wrapper);
-                    });
+                    if (!Array.isArray(data) || data.length === 0) {
+                        return;
+                    }
+
+                    if (progressContainer && !progressContainer.querySelector('.alert')) {
+                        const alert = document.createElement('div');
+                        alert.classList.add('alert', 'alert-success');
+                        alert.setAttribute('role', 'alert');
+                        alert.textContent = data.length === 1
+                            ? 'Estamos procesando tu archivo. En unos instantes verás el progreso actualizado en esta página.'
+                            : `Estamos procesando tus ${data.length} archivos. En unos instantes verás el progreso actualizado en esta página.`;
+                        progressContainer.prepend(alert);
+                    }
+
+                    data.forEach(addProcessToContainer);
+                })
+                .catch(error => {
+                    console.error('Error al procesar los archivos:', error);
+                    alert('Ocurrió un error al intentar procesar los archivos. Por favor, intenta nuevamente.');
                 });
         });
 
