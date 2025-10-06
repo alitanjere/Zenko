@@ -2,7 +2,107 @@
     ViewData["Title"] = "Cálculo de Costos de Producción";
 }
 
-<div class="card">
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-eyebrow"><span></span> Plataforma textil inteligente</div>
+        <h1>Gestioná tus costos con precisión y visuales de nueva generación.</h1>
+        <p>
+            Carga insumos, fichas técnicas y consumos en segundos mientras la plataforma automatiza cálculos,
+            identifica oportunidades de ahorro y te guía con analíticas claras.
+        </p>
+        <div class="hero-cta">
+            <a class="btn btn-primary" href="#upload-section">Cargar archivos</a>
+            <a class="btn btn-outline-light" href="#workflow">Ver cómo funciona</a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="hero-glow"></div>
+        <img src="~/img/hero-illustration.svg" alt="Ilustración futurista sobre análisis textil" />
+    </div>
+</section>
+
+<section class="stats-grid">
+    <div class="stat-card">
+        <strong>+48%</strong>
+        <span>más velocidad en conciliación de costos</span>
+    </div>
+    <div class="stat-card">
+        <strong>24/7</strong>
+        <span>monitor de procesos con notificaciones en vivo</span>
+    </div>
+    <div class="stat-card">
+        <strong>99.3%</strong>
+        <span>precisión promedio en detección de variaciones</span>
+    </div>
+    <div class="stat-card">
+        <strong>15min</strong>
+        <span>para pasar de datos crudos a reporte final</span>
+    </div>
+</section>
+
+<section class="section-title">
+    <div>
+        <h2>Un sistema modular, pensado para el día a día</h2>
+        <p>Interfaz moderna con microinteracciones y componentes reutilizables.</p>
+    </div>
+    <a class="accent-link" href="#upload-section">Empezar ahora</a>
+</section>
+
+<section class="features-grid">
+    <article class="feature-card">
+        <div class="icon-pill">
+            <i class="bi bi-hdd-stack"></i>
+        </div>
+        <h3>Imports drag & drop</h3>
+        <p>Subí múltiples archivos Excel con validaciones instantáneas y feedback visual en tiempo real.</p>
+    </article>
+    <article class="feature-card">
+        <div class="icon-pill">
+            <i class="bi bi-bar-chart-steps"></i>
+        </div>
+        <h3>Insights automáticos</h3>
+        <p>Detectamos desvíos de costos y sugerimos ajustes a partir de tu histórico de consumos.</p>
+    </article>
+    <article class="feature-card">
+        <div class="icon-pill">
+            <i class="bi bi-lightning-charge"></i>
+        </div>
+        <h3>Microinteracciones</h3>
+        <p>Animaciones suaves guían cada acción, optimizando accesibilidad y claridad en cada paso.</p>
+    </article>
+    <article class="feature-card">
+        <div class="icon-pill">
+            <i class="bi bi-moon-stars"></i>
+        </div>
+        <h3>Modo dual</h3>
+        <p>Estética glassmorphism con tema claro/oscuro, preparada para sesiones prolongadas.</p>
+    </article>
+</section>
+
+<section id="workflow" class="workflow-section">
+    <div class="section-title">
+        <div>
+            <h2>Cómo integramos tus datos</h2>
+            <p>Experiencia end-to-end desde la carga hasta el reporte consolidado.</p>
+        </div>
+    </div>
+    <div class="workflow-steps">
+        <article class="workflow-step" data-step="Paso 1">
+            <h4>Cargá tus fuentes</h4>
+            <p>Arrastrá Excel de telas, avíos y consumos. Validamos formatos y detectamos inconsistencias.</p>
+        </article>
+        <article class="workflow-step" data-step="Paso 2">
+            <h4>Procesamiento en vivo</h4>
+            <p>Visualizá barras de progreso animadas con actualizaciones en tiempo real vía SignalR.</p>
+        </article>
+        <article class="workflow-step" data-step="Paso 3">
+            <h4>Insights accionables</h4>
+            <p>Obtén tablas interactivas con costos por metro/unidad y exportá resultados listos para producción.</p>
+        </article>
+    </div>
+</section>
+
+<section id="upload-section" class="card">
     <div class="card-header">
         Cargar Archivos de Costos
     </div>
@@ -26,17 +126,15 @@
             </div>
         </form>
     </div>
-</div>
+</section>
 
 <div id="progress-container" class="mt-3"></div>
 
 @if (ViewData["Telas"] != null || ViewData["Avios"] != null)
 {
-    <div class="card">
-        <div class="card-header">
-            Resultados del Procesamiento
-        </div>
-        <div class="card-body">
+    <div class="results-card">
+        <h3 class="mb-3">Resultados del Procesamiento</h3>
+        <div class="results-body">
             @if (ViewData["Telas"] != null)
             {
                 var telas = (List<Zenko.Models.TelaExcel>)ViewData["Telas"];

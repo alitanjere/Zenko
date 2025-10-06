@@ -36,23 +36,51 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const themeToggle = document.getElementById('theme-toggle');
+    const themeLabel = themeToggle ? themeToggle.querySelector('.theme-label') : null;
     if (themeToggle) {
         const body = document.body;
         const storedTheme = localStorage.getItem('theme') || 'light';
         body.setAttribute('data-theme', storedTheme);
-        updateToggleText(storedTheme);
+        updateToggleAppearance(storedTheme);
 
         themeToggle.addEventListener('click', function () {
             const currentTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             body.setAttribute('data-theme', currentTheme);
             localStorage.setItem('theme', currentTheme);
-            updateToggleText(currentTheme);
+            updateToggleAppearance(currentTheme);
         });
     }
 
-    function updateToggleText(theme) {
-        if (themeToggle) {
-            themeToggle.textContent = theme === 'dark' ? 'Modo claro' : 'Modo oscuro';
+    function updateToggleAppearance(theme) {
+        if (themeToggle && themeLabel) {
+            themeLabel.textContent = theme === 'dark' ? 'Modo claro' : 'Modo oscuro';
+            themeToggle.setAttribute('aria-pressed', theme === 'dark');
         }
     }
+
+    const header = document.querySelector('.navbar');
+    if (header) {
+        const handleScroll = () => {
+            if (window.scrollY > 12) {
+                header.classList.add('navbar-scrolled');
+            } else {
+                header.classList.remove('navbar-scrolled');
+            }
+        };
+        handleScroll();
+        window.addEventListener('scroll', handleScroll);
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const targetId = this.getAttribute('href');
+            if (targetId.length > 1) {
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    e.preventDefault();
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    });
 });
