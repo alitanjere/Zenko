@@ -180,6 +180,20 @@
   color: rgba(226, 232, 240, 0.75);
 }
 
+.price-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-nav-link);
+}
+
+[data-theme="dark"] .price-value {
+  color: #f8fafc;
+}
+
+.price-value strong {
+  color: inherit;
+}
+
 /* Feature cards */
 .section-title {
   margin-bottom: 1.5rem;
@@ -564,6 +578,50 @@
 
   #file-name-display {
     font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .hero-content {
+    display: grid;
+    gap: 1.25rem;
+    justify-items: center;
+  }
+
+  .hero p {
+    text-align: center;
+  }
+
+  .stats-grid,
+  .features-grid,
+  .workflow-steps,
+  .results-body {
+    grid-template-columns: 1fr;
+  }
+
+  .section-title {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .feature-card,
+  .workflow-step {
+    text-align: center;
+  }
+
+  .workflow-step::before {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .accent-link {
+    justify-content: center;
   }
 }
 
