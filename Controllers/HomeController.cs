@@ -10,6 +10,7 @@ using Microsoft.Data.SqlClient;
 using System;
 using System.Linq;
 using System.IO;
+using System.Text.Json;
 using Dapper;
 
 
@@ -34,6 +35,24 @@ public class HomeController : Controller
         if (HttpContext.Session.GetString("Usuario") == null)
         {
             return RedirectToAction("Login", "Account");
+        }
+
+        if (TempData["MensajeExito"] is string mensaje)
+        {
+            ViewData["MensajeExito"] = mensaje;
+        }
+
+        if (TempData["Procesos"] is string procesosJson && !string.IsNullOrWhiteSpace(procesosJson))
+        {
+            try
+            {
+                var procesos = JsonSerializer.Deserialize<List<QueuedProcessViewModel>>(procesosJson) ?? new List<QueuedProcessViewModel>();
+                ViewData["Procesos"] = procesos;
+            }
+            catch (JsonException)
+            {
+                // Si no se puede deserializar, ignoramos y continuamos sin procesos iniciales.
+            }
         }
         return View();
     }
@@ -61,7 +80,7 @@ public class HomeController : Controller
             return BadRequest("No files uploaded");
         }
 
-        var procesos = new List<object>();
+        var procesos = new List<QueuedProcessViewModel>();
 
         using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
         await connection.OpenAsync();
@@ -81,10 +100,20 @@ public class HomeController : Controller
 
             await _fileQueue.QueueAsync(new QueuedFile { Id = id, FileName = archivo.FileName, Content = content });
 
-            procesos.Add(new { id, name = archivo.FileName });
+            procesos.Add(new QueuedProcessViewModel { Id = id, Name = archivo.FileName });
         }
 
-        return Json(procesos);
+        if (Request.Headers.TryGetValue("X-Requested-With", out var requestedWith) && string.Equals(requestedWith, "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+        {
+            return Json(procesos);
+        }
+
+        TempData["Procesos"] = JsonSerializer.Serialize(procesos);
+        TempData["MensajeExito"] = procesos.Count == 1
+            ? "Estamos procesando tu archivo. En unos momentos verás el progreso aquí mismo."
+            : $"Estamos procesando tus {procesos.Count} archivos. En unos momentos verás el progreso aquí mismo.";
+
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
