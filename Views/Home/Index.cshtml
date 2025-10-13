@@ -116,8 +116,8 @@
                 @ViewData["MensajeExito"]
             </div>
         }
-        <form asp-action="Index" method="post" enctype="multipart/form-data">
-            <div class="file-upload-wrapper">
+        <form asp-action="Index" method="post" enctype="multipart/form-data" class="upload-form">
+            <div class="file-upload-wrapper" id="upload-dropzone">
                 <div class="file-upload-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-cloud-upload" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10.5a.5.5 0 0 1 0-1h2.188C13.938 10 15 8.981 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-4.242 3.153A4.98 4.98 0 0 0 1.55 8H1.5a.5.5 0 0 1 0-1h.05a4.98 4.98 0 0 0 1.95-3.846A5.53 5.53 0 0 1 4.406 1.342z"/>
@@ -125,11 +125,31 @@
                     </svg>
                 </div>
                 <label for="archivosExcel" class="file-upload-label">
-                    Arrastra tus archivos aquí o haz clic para seleccionar
+                    Arrastrá tus archivos acá o tocá para elegirlos
                 </label>
                 <input type="file" name="archivosExcel" id="archivosExcel" multiple accept=".xls,.xlsx" />
             </div>
-            <div id="file-name-display" class="text-center"></div>
+            <p class="file-upload-helper text-muted small mb-4">
+                Se admiten archivos Excel (.xls o .xlsx) de hasta 10&nbsp;MB. Podés seleccionar varios a la vez.
+            </p>
+            <div class="upload-details">
+                <div class="upload-instructions">
+                    <h3>Consejos rápidos</h3>
+                    <ul>
+                        <li>Usá un archivo diferente para cada tipo de dato (insumos, fichas técnicas, consumos).</li>
+                        <li>Chequeá que la primera fila tenga los nombres de las columnas.</li>
+                        <li>Si volvés a subir un archivo, reemplazará la información existente.</li>
+                    </ul>
+                </div>
+                <div class="selected-files">
+                    <div class="selected-files__header">
+                        <span class="fw-semibold">Archivos seleccionados</span>
+                        <button type="button" class="btn btn-link btn-sm" id="clear-files">Vaciar lista</button>
+                    </div>
+                    <ul id="file-list" class="file-list list-unstyled mb-2" aria-live="polite"></ul>
+                    <div id="file-summary" class="file-summary text-muted small"></div>
+                </div>
+            </div>
             <div class="btn-container">
                 <button type="submit" class="btn btn-primary">Procesar Archivos</button>
             </div>
