@@ -365,83 +365,156 @@ namespace Zenko.Services
             return tipo == 'A';
         }
 
-        public (List<ProductoInsumoExcel> relaciones, Dictionary<string, string> todasLasVariantes) LeerProductoInsumos(List<IFormFile> archivosExcel)
+        public ProductoInsumoParseResult LeerProductoInsumos(List<IFormFile> archivosExcel)
         {
-            var relaciones = new List<ProductoInsumoExcel>();
-            var todasLasVariantes = new Dictionary<string, string>();
+            var resultado = new ProductoInsumoParseResult();
+
+            if (archivosExcel == null)
+            {
+                return resultado;
+            }
 
             foreach (var archivo in archivosExcel)
             {
-                using var stream = new MemoryStream();
-                archivo.CopyTo(stream);
-                stream.Position = 0;
-
-                using var package = new ExcelPackage(stream);
-                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-                if (worksheet == null) continue;
-
-                var headers = worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column]
-                    .Select(cell => cell.Value?.ToString().Trim().ToUpper() ?? "")
-                    .ToList();
-
-                var requiredHeaders = new Dictionary<string, string>
+                if (archivo == null)
                 {
-                    { "VarianteCodigo", "VARIANTE_CODIGO" },
-                    { "VarianteNombre", "VARIANTE" },
-                    { "ModeloCodigo", "MODELO" },
-                    { "ModeloNombre", "MODELO_NOMBRE" },
-                    { "InsumoCodigo", "INSUMO" },
-                    { "InsumoDescripcion", "INSUMO_DESC" },
-                    { "Cantidad", "CANTIDAD" }
-                };
-
-                var colIndices = new Dictionary<string, int>();
-                foreach (var header in requiredHeaders)
-                {
-                    int index = headers.IndexOf(header.Value);
-                    if (index == -1)
-                    {
-                        throw new Exception($"No se pudo encontrar la columna requerida '{header.Value}' en el archivo Excel.");
-                    }
-                    colIndices[header.Key] = index + 1;
+                    continue;
                 }
 
-                for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+                var nombreArchivo = string.IsNullOrWhiteSpace(archivo.FileName) ? "archivo sin nombre" : archivo.FileName;
+
+                try
                 {
-                    var varianteCodigo = worksheet.Cells[row, colIndices["VarianteCodigo"]].Value?.ToString()?.Trim();
-                    var modeloCodigo = worksheet.Cells[row, colIndices["ModeloCodigo"]].Value?.ToString()?.Trim();
-
-                    if (!string.IsNullOrWhiteSpace(varianteCodigo) && !string.IsNullOrWhiteSpace(modeloCodigo))
+                    if (archivo.Length == 0)
                     {
-                        if (!todasLasVariantes.ContainsKey(varianteCodigo))
-                        {
-                            todasLasVariantes.Add(varianteCodigo, modeloCodigo);
-                        }
-                    }
-
-                    var insumoCodigo = worksheet.Cells[row, colIndices["InsumoCodigo"]].Value?.ToString();
-
-                    if (string.IsNullOrWhiteSpace(varianteCodigo) || string.IsNullOrWhiteSpace(insumoCodigo))
-                    {
+                        resultado.Advertencias.Add($"El archivo \"{nombreArchivo}\" está vacío y se omitió.");
                         continue;
                     }
 
-                    decimal cantidad = ParsearDecimalDesdeString(worksheet.Cells[row, colIndices["Cantidad"]].Value?.ToString());
-                    if (cantidad < 0) continue;
+                    using var stream = new MemoryStream();
+                    archivo.CopyTo(stream);
+                    stream.Position = 0;
 
-                    relaciones.Add(new ProductoInsumoExcel
+                    using var package = new ExcelPackage(stream);
+                    var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                    if (worksheet?.Dimension == null)
                     {
-                        VarianteCodigo = varianteCodigo,
-                        VarianteNombre = worksheet.Cells[row, colIndices["VarianteNombre"]].Value?.ToString().Trim(),
-                        ModeloCodigo = modeloCodigo,
-                        ModeloNombre = worksheet.Cells[row, colIndices["ModeloNombre"]].Value?.ToString().Trim(),
-                        InsumoCodigo = insumoCodigo.Trim(),
-                        InsumoDescripcion = worksheet.Cells[row, colIndices["InsumoDescripcion"]].Value?.ToString().Trim(),
-                        Cantidad = cantidad
-                    });
+                        resultado.Advertencias.Add($"El archivo \"{nombreArchivo}\" no contiene datos en la primera hoja y se omitió.");
+                        continue;
+                    }
+
+                    var headers = worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column]
+                        .Select(cell => cell.Value?.ToString()?.Trim() ?? string.Empty)
+                        .ToList();
+
+                    var requiredHeaders = new Dictionary<string, string>
+                    {
+                        { "VarianteCodigo", "VARIANTE_CODIGO" },
+                        { "VarianteNombre", "VARIANTE" },
+                        { "ModeloCodigo", "MODELO" },
+                        { "ModeloNombre", "MODELO_NOMBRE" },
+                        { "InsumoCodigo", "INSUMO" },
+                        { "InsumoDescripcion", "INSUMO_DESC" },
+                        { "Cantidad", "CANTIDAD" }
+                    };
+
+                    var colIndices = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                    var missingHeaders = new List<string>();
+                    foreach (var header in requiredHeaders)
+                    {
+                        int index = headers.FindIndex(h => string.Equals(h, header.Value, StringComparison.OrdinalIgnoreCase));
+                        if (index == -1)
+                        {
+                            missingHeaders.Add(header.Value);
+                        }
+                        else
+                        {
+                            colIndices[header.Key] = index + 1;
+                        }
+                    }
+
+                    if (missingHeaders.Count > 0)
+                    {
+                        resultado.Errores.Add($"No se encontraron las columnas requeridas ({string.Join(", ", missingHeaders)}) en \"{nombreArchivo}\".");
+                        continue;
+                    }
+
+                    int filasValidas = 0;
+                    int filasSinClaves = 0;
+                    int filasCantidadInvalida = 0;
+
+                    for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+                    {
+                        var varianteCodigo = worksheet.Cells[row, colIndices["VarianteCodigo"]].Value?.ToString()?.Trim();
+                        var varianteNombre = worksheet.Cells[row, colIndices["VarianteNombre"]].Value?.ToString()?.Trim();
+                        var modeloCodigo = worksheet.Cells[row, colIndices["ModeloCodigo"]].Value?.ToString()?.Trim();
+                        var modeloNombre = worksheet.Cells[row, colIndices["ModeloNombre"]].Value?.ToString()?.Trim();
+                        var insumoCodigo = worksheet.Cells[row, colIndices["InsumoCodigo"]].Value?.ToString()?.Trim();
+                        var insumoDescripcion = worksheet.Cells[row, colIndices["InsumoDescripcion"]].Value?.ToString()?.Trim();
+
+                        bool filaTieneDatos = !string.IsNullOrWhiteSpace(varianteCodigo) ||
+                                              !string.IsNullOrWhiteSpace(modeloCodigo) ||
+                                              !string.IsNullOrWhiteSpace(insumoCodigo) ||
+                                              !string.IsNullOrWhiteSpace(insumoDescripcion);
+
+                        if (string.IsNullOrWhiteSpace(varianteCodigo) || string.IsNullOrWhiteSpace(insumoCodigo))
+                        {
+                            if (filaTieneDatos)
+                            {
+                                filasSinClaves++;
+                            }
+                            continue;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(modeloCodigo) && !resultado.TodasLasVariantes.ContainsKey(varianteCodigo))
+                        {
+                            resultado.TodasLasVariantes[varianteCodigo] = modeloCodigo;
+                        }
+
+                        decimal cantidad = ParsearDecimalDesdeString(worksheet.Cells[row, colIndices["Cantidad"]].Value?.ToString());
+                        if (cantidad < 0)
+                        {
+                            filasCantidadInvalida++;
+                            continue;
+                        }
+
+                        filasValidas++;
+
+                        resultado.Relaciones.Add(new ProductoInsumoExcel
+                        {
+                            VarianteCodigo = varianteCodigo,
+                            VarianteNombre = varianteNombre,
+                            ModeloCodigo = modeloCodigo,
+                            ModeloNombre = modeloNombre,
+                            InsumoCodigo = insumoCodigo,
+                            InsumoDescripcion = insumoDescripcion,
+                            Cantidad = cantidad
+                        });
+                    }
+
+                    if (filasValidas == 0)
+                    {
+                        if (filasSinClaves > 0 || filasCantidadInvalida > 0)
+                        {
+                            resultado.Advertencias.Add($"No se encontraron filas válidas en \"{nombreArchivo}\". Filas omitidas por datos incompletos: {filasSinClaves}, por cantidades inválidas: {filasCantidadInvalida}.");
+                        }
+                        else
+                        {
+                            resultado.Advertencias.Add($"\"{nombreArchivo}\" no contiene filas con datos de fichas técnicas para procesar.");
+                        }
+                    }
+                    else if (filasSinClaves > 0 || filasCantidadInvalida > 0)
+                    {
+                        resultado.Advertencias.Add($"Se procesaron {filasValidas} filas de \"{nombreArchivo}\". Se omitieron {filasSinClaves} por datos incompletos y {filasCantidadInvalida} por cantidades inválidas.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    resultado.Errores.Add($"Ocurrió un error al leer \"{nombreArchivo}\": {ex.Message}");
                 }
             }
-            return (relaciones, todasLasVariantes);
+
+            return resultado;
         }
 
         public byte[] CrearExcelReporteFinal(List<ReporteFinalViewModel> reporte)

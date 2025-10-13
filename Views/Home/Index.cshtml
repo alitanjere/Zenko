@@ -1,6 +1,6 @@
 @using System.Text.Json
 @{
-    ViewData["Title"] = "Cálculo de Costos de Producción";
+    ViewData["Title"] = "Subir Insumos";
     var procesosIniciales = ViewData["Procesos"] as List<Zenko.Models.QueuedProcessViewModel> ?? new List<Zenko.Models.QueuedProcessViewModel>();
     var procesosInicialesJson = JsonSerializer.Serialize(procesosIniciales);
 }

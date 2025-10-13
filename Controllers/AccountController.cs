@@ -57,9 +57,13 @@ public class AccountController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public IActionResult Logout()
     {
-        HttpContext.Session.Clear();
+        if (HttpContext.Session.GetString("Usuario") != null)
+        {
+            HttpContext.Session.Clear();
+        }
         return RedirectToAction("Login");
     }
 }
