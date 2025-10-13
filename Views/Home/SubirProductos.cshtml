@@ -1,28 +1,47 @@
-@{
-    ViewData["Title"] = "Subir Archivos de Productos";
+@{ 
+    ViewData["Title"] = "Subir Fichas Técnicas";
+    var puedeCargarProductos = ViewData["PuedeCargarProductos"] as bool? ?? true;
+    var advertenciaInsumos = ViewData["AdvertenciaInsumos"] as string;
+    var advertenciasArchivos = ViewData["AdvertenciasArchivos"] as System.Collections.Generic.IEnumerable<string>;
 }
 
 <div class="card">
     <div class="card-header">
-        Cargar Archivos de Productos
+        Cargar Fichas Técnicas
     </div>
     <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(advertenciaInsumos))
+        {
+            <div class="alert alert-warning" role="alert">
+                @Html.Raw(advertenciaInsumos)
+            </div>
+        }
+        if (advertenciasArchivos != null)
+        {
+            foreach (var advertencia in advertenciasArchivos)
+            {
+                if (!string.IsNullOrWhiteSpace(advertencia))
+                {
+                    <div class="alert alert-info" role="alert">@advertencia</div>
+                }
+            }
+        }
         <div asp-validation-summary="All" class="text-danger"></div>
         <form asp-action="SubirProductos" method="post" enctype="multipart/form-data">
-            <div class="file-upload-wrapper">
+            <div class="file-upload-wrapper@(puedeCargarProductos ? string.Empty : " is-disabled")">
                 <div class="file-upload-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-box-seam" viewBox="0 0 16 16">
                         <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L8 2.596l3.75 1.865 2.404-.961L8.186 1.113zM14.5 3.5l-2.404.961L8 6.404 4.25 4.46l-2.404-.961L1.5 3.5v9l6.5 3 6.5-3v-9zM1 3.76l7 2.8v8.64l-7-2.8V3.76zm14 0v8.64l-7 2.8v-8.64l7-2.8z"/>
                     </svg>
                 </div>
-                <label for="archivosExcel" class="file-upload-label">
-                    Arrastra tus archivos de productos aquí o haz clic para seleccionar
+                <label for="archivosExcel" class="file-upload-label@(puedeCargarProductos ? string.Empty : " disabled-label")"@(!puedeCargarProductos ? " aria-disabled=\"true\"" : string.Empty)>
+                    Arrastra tus fichas técnicas en Excel aquí o haz clic para seleccionar
                 </label>
-                <input type="file" name="archivosExcel" id="archivosExcel" multiple accept=".xls,.xlsx" />
+                <input type="file" name="archivosExcel" id="archivosExcel" multiple accept=".xls,.xlsx" @(!puedeCargarProductos ? "disabled=\"disabled\"" : string.Empty) />
             </div>
             <div id="file-name-display" class="text-center"></div>
             <div class="btn-container">
-                <button type="submit" class="btn btn-primary">Procesar Productos</button>
+                <button type="submit" class="btn btn-primary" @(!puedeCargarProductos ? "disabled=\"disabled\"" : string.Empty)>Procesar Fichas Técnicas</button>
             </div>
         </form>
     </div>
@@ -37,19 +56,24 @@
 
 @section Scripts {
     <script>
-        document.getElementById('archivosExcel').addEventListener('change', function(e) {
-            const fileInput = e.target;
-            const display = document.getElementById('file-name-display');
-
-            if (fileInput.files && fileInput.files.length > 0) {
-                if (fileInput.files.length === 1) {
-                    display.textContent = 'Archivo seleccionado: ' + fileInput.files[0].name;
-                } else {
-                    display.textContent = fileInput.files.length + ' archivos seleccionados';
-                }
-            } else {
-                display.textContent = '';
+        (function () {
+            const fileInput = document.getElementById('archivosExcel');
+            if (!fileInput) {
+                return;
             }
-        });
+            fileInput.addEventListener('change', function (e) {
+                const display = document.getElementById('file-name-display');
+
+                if (fileInput.files && fileInput.files.length > 0) {
+                    if (fileInput.files.length === 1) {
+                        display.textContent = 'Archivo seleccionado: ' + fileInput.files[0].name;
+                    } else {
+                        display.textContent = fileInput.files.length + ' archivos seleccionados';
+                    }
+                } else {
+                    display.textContent = '';
+                }
+            });
+        })();
     </script>
 }

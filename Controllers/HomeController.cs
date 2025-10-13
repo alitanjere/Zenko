@@ -64,6 +64,9 @@ public class HomeController : Controller
         {
             return RedirectToAction("Login", "Account");
         }
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
+        var hayInsumos = BD.HayInsumosCargados(connectionString);
+        ConfigurarEstadoProductos(hayInsumos);
         return View();
     }
 
@@ -124,6 +127,15 @@ public class HomeController : Controller
             return RedirectToAction("Login", "Account");
         }
 
+        var connectionString = _configuration.GetConnectionString("DefaultConnection");
+        var hayInsumos = BD.HayInsumosCargados(connectionString);
+        ConfigurarEstadoProductos(hayInsumos);
+        if (!hayInsumos)
+        {
+            ModelState.AddModelError(string.Empty, "No se pueden procesar fichas técnicas hasta que cargues los insumos.");
+            return View();
+        }
+
         if (archivosExcel == null || archivosExcel.Count == 0)
         {
             ModelState.AddModelError("", "Por favor, suba al menos un archivo Excel de productos.");
@@ -137,17 +149,33 @@ public class HomeController : Controller
 
         try
         {
-            var (fichaTecnica, todasLasVariantes) = _excelService.LeerProductoInsumos(archivosExcel);
+            var resultadoLectura = _excelService.LeerProductoInsumos(archivosExcel);
 
-            if (!fichaTecnica.Any() && !todasLasVariantes.Any())
+            if (resultadoLectura.Advertencias.Any())
             {
-                ModelState.AddModelError("", "El archivo no contiene filas de datos válidas o las columnas requeridas no se encontraron.");
+                ViewData["AdvertenciasArchivos"] = resultadoLectura.Advertencias;
+            }
+
+            foreach (var error in resultadoLectura.Errores)
+            {
+                ModelState.AddModelError("", error);
+            }
+
+            var fichaTecnica = resultadoLectura.Relaciones;
+            var todasLasVariantes = resultadoLectura.TodasLasVariantes;
+
+            if (!fichaTecnica.Any())
+            {
+                if (!resultadoLectura.Errores.Any())
+                {
+                    ModelState.AddModelError("", "Los archivos seleccionados no contienen filas válidas de fichas técnicas.");
+                }
                 return View();
             }
 
-            var productosAgrupados = fichaTecnica.GroupBy(f => f.VarianteCodigo);
+            var productosAgrupados = fichaTecnica.GroupBy(f => f.VarianteCodigo, StringComparer.OrdinalIgnoreCase);
 
-            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
 
@@ -176,10 +204,17 @@ public class HomeController : Controller
                         relacionesExitosas += grupoProducto.Count();
                         variantesExitosas.Add(varianteCodigo);
                     }
-                    catch (SqlException)
+                    catch (SqlException ex)
                     {
                         var modeloCodigo = primerItem.ModeloCodigo;
-                        ModelState.AddModelError("", $"el producto {modeloCodigo}, en {varianteCodigo} variante falló.");
+                        if (ex.Number == 50000 && ex.Message.Contains("insumo", StringComparison.OrdinalIgnoreCase))
+                        {
+                            ModelState.AddModelError("", $"No se pudo actualizar {modeloCodigo} ({varianteCodigo}) porque faltan insumos cargados. Verificá que todos los códigos de insumo existan en el paso de insumos.");
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("", $"El producto {modeloCodigo}, en la variante {varianteCodigo}, falló: {ex.Message}");
+                        }
                         variantesFallidas.Add(varianteCodigo);
                     }
                 }
@@ -192,7 +227,7 @@ public class HomeController : Controller
                 if (!variantesExitosas.Contains(varianteCodigo) && !variantesFallidas.Contains(varianteCodigo))
                 {
                     var modeloCodigo = entry.Value;
-                    ModelState.AddModelError("", $"el producto {modeloCodigo}, en {varianteCodigo} variante falló.");
+                    ModelState.AddModelError("", $"El producto {modeloCodigo}, en la variante {varianteCodigo}, no se pudo procesar.");
                 }
             }
 
@@ -206,6 +241,7 @@ public class HomeController : Controller
             ModelState.AddModelError("", $"Error al procesar el archivo: {ex.Message}");
         }
 
+        ConfigurarEstadoProductos(true);
         return View();
     }
 
@@ -259,6 +295,20 @@ public class HomeController : Controller
         {
             ModelState.AddModelError("", $"Error al procesar el archivo: {ex.Message}");
             return View(new ConsumoResultadoViewModel());
+        }
+    }
+
+    private void ConfigurarEstadoProductos(bool hayInsumos)
+    {
+        ViewData["PuedeCargarProductos"] = hayInsumos;
+        if (!hayInsumos)
+        {
+            var link = Url.Action(nameof(Index), "Home");
+            ViewData["AdvertenciaInsumos"] = $"Para cargar fichas técnicas, primero subí los insumos desde la sección \"Subir Insumos\". Podés hacerlo <a href=\"{link}\">desde aquí</a>.";
+        }
+        else
+        {
+            ViewData.Remove("AdvertenciaInsumos");
         }
     }
 

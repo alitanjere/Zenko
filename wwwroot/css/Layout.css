@@ -75,6 +75,16 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6,
+[data-theme="dark"] .brand-name {
+  color: var(--color-texto-dark);
+}
+
 h1, h2, h3, .brand-name {
   font-family: 'Clash Display', 'Montserrat', sans-serif;
   letter-spacing: -0.01em;

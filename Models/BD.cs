@@ -129,4 +129,13 @@ public static class BD
             return true;
         }
     }
+
+    public static bool HayInsumosCargados(string connectionString)
+    {
+        using (var db = new SqlConnection(connectionString))
+        {
+            const string sql = "SELECT CASE WHEN EXISTS (SELECT 1 FROM Insumos) THEN 1 ELSE 0 END";
+            return db.QueryFirst<int>(sql) == 1;
+        }
+    }
 }

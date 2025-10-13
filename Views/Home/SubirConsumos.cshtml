@@ -1,6 +1,6 @@
 @model Zenko.Models.ConsumoResultadoViewModel
 @{
-    ViewData["Title"] = "Subir Archivos de Consumos";
+    ViewData["Title"] = "Subir Consumos";
 }
 
 <div class="card">
@@ -130,19 +130,24 @@
 
 @section Scripts {
     <script>
-        document.getElementById('archivosConsumo').addEventListener('change', function (e) {
-            const fileInput = e.target;
-            const display = document.getElementById('consumo-file-name');
-
-            if (fileInput.files && fileInput.files.length > 0) {
-                if (fileInput.files.length === 1) {
-                    display.textContent = 'Archivo seleccionado: ' + fileInput.files[0].name;
-                } else {
-                    display.textContent = fileInput.files.length + ' archivos seleccionados';
-                }
-            } else {
-                display.textContent = '';
+        (function () {
+            const fileInput = document.getElementById('archivosConsumo');
+            if (!fileInput) {
+                return;
             }
-        });
+            fileInput.addEventListener('change', function (e) {
+                const display = document.getElementById('consumo-file-name');
+
+                if (fileInput.files && fileInput.files.length > 0) {
+                    if (fileInput.files.length === 1) {
+                        display.textContent = 'Archivo seleccionado: ' + fileInput.files[0].name;
+                    } else {
+                        display.textContent = fileInput.files.length + ' archivos seleccionados';
+                    }
+                } else {
+                    display.textContent = '';
+                }
+            });
+        })();
     </script>
 }
